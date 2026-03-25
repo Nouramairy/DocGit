@@ -19,9 +19,36 @@
           </div>
         </div>
       </div>
+
       <div class="doc-actions">
-        <button class="action-btn">
-          <span class="material-icons-outlined">share</span>
+        <!-- Live Presence Avatars -->
+        @if (activeUsers().length > 0) {
+          <div class="presence-bar">
+            @for (user of activeUsers(); track user.id) {
+              <div
+                class="presence-avatar"
+                [style.background]="user.color"
+                [title]="getPresenceTooltip(user)"
+                [class.typing]="user.isTyping"
+              >
+                <span class="presence-initials">{{ user.initials }}</span>
+                @if (user.isTyping) {
+                  <span class="typing-indicator">
+                    <span class="typing-dot"></span>
+                    <span class="typing-dot"></span>
+                    <span class="typing-dot"></span>
+                  </span>
+                }
+              </div>
+            }
+            <span class="presence-count">{{ activeUsers().length }} active</span>
+          </div>
+        }
+
+        <div class="header-divider"></div>
+
+        <button class="action-btn" (click)="shareClick.emit()">
+          <span class="material-icons-outlined">group_add</span>
           Share
         </button>
         <button class="action-btn primary">
@@ -148,6 +175,13 @@
         <span class="status-item">{{ charCount() }} characters</span>
       </div>
       <div class="status-right">
+        @if (activeUsers().length > 0) {
+          <span class="status-item collab-status">
+            <span class="material-icons-outlined">people</span>
+            {{ activeUsers().length + 1 }} collaborators
+          </span>
+          <span class="status-separator">|</span>
+        }
         <span class="status-item saved">
           <span class="material-icons-outlined">cloud_done</span>
           Saved

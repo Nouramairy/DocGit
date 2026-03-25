@@ -1,0 +1,155 @@
+<div class="panel-overlay" (click)="onOverlayClick($event)">
+  <div class="panel-slide">
+    <!-- Header -->
+    <div class="panel-header">
+      <div class="panel-title-row">
+        <span class="material-icons-outlined panel-icon">group</span>
+        <div>
+          <h2 class="panel-title">Collaborators</h2>
+          <span class="online-badge">{{ onlineCount() }} online now</span>
+        </div>
+      </div>
+      <button class="close-btn" (click)="close.emit()">
+        <span class="material-icons-outlined">close</span>
+      </button>
+    </div>
+
+    <!-- Invite Section -->
+    <div class="invite-section">
+      <div class="invite-row">
+        <div class="invite-input-wrap">
+          <span class="material-icons-outlined invite-icon">person_add</span>
+          <input
+            type="email"
+            class="invite-input"
+            placeholder="Invite by email..."
+            [value]="inviteEmail()"
+            (input)="onEmailInput($event)"
+            (keydown)="onInviteKeydown($event)"
+          />
+        </div>
+        <div class="invite-role-toggle">
+          <button
+            class="role-chip"
+            [class.active]="inviteRole() === 'editor'"
+            (click)="setInviteRole('editor')"
+          >
+            <span class="material-icons-outlined">edit</span>
+            Editor
+          </button>
+          <button
+            class="role-chip"
+            [class.active]="inviteRole() === 'viewer'"
+            (click)="setInviteRole('viewer')"
+          >
+            <span class="material-icons-outlined">visibility</span>
+            Viewer
+          </button>
+        </div>
+        <button
+          class="invite-btn"
+          [class.disabled]="!inviteEmail().trim()"
+          (click)="sendInvite()"
+        >
+          Invite
+        </button>
+      </div>
+
+      <!-- Share Link -->
+      <div class="share-link-row">
+        <div class="link-display">
+          <span class="material-icons-outlined link-icon">link</span>
+          <span class="link-text">docgit.app/d/a3f8x...</span>
+        </div>
+        <button class="copy-link-btn" (click)="copyLink()">
+          <span class="material-icons-outlined">{{ linkCopied() ? 'check' : 'content_copy' }}</span>
+          {{ linkCopied() ? 'Copied!' : 'Copy link' }}
+        </button>
+      </div>
+    </div>
+
+    <!-- Collaborator List -->
+    <div class="collab-list">
+      <div class="list-header">
+        <span class="list-title">People with access</span>
+        <span class="list-count">{{ collaborators().length }}</span>
+      </div>
+
+      @for (collab of collaborators(); track collab.id) {
+        <div class="collab-row">
+          <div class="collab-avatar" [style.background]="collab.color">
+            <span class="collab-initials">{{ collab.initials }}</span>
+            @if (collab.isOnline) {
+              <span class="online-dot" [class.typing]="collab.isTyping"></span>
+            }
+          </div>
+          <div class="collab-info">
+            <div class="collab-name-row">
+              <span class="collab-name">{{ collab.name }}</span>
+              @if (collab.role === 'admin') {
+                <span class="owner-tag">Owner</span>
+              }
+            </div>
+            <span class="collab-meta">
+              {{ collab.email }}
+              <span class="collab-status" [class.online]="collab.isOnline" [class.typing]="collab.isTyping">
+                · {{ getStatusText(collab) }}
+              </span>
+            </span>
+          </div>
+
+          <!-- Role Control -->
+          <div class="role-control">
+            <button class="role-btn" (click)="toggleRoleDropdown(collab.id)">
+              <span class="material-icons-outlined role-btn-icon">{{ getRoleIcon(collab.role) }}</span>
+              <span class="role-btn-label">{{ getRoleLabel(collab.role) }}</span>
+              <span class="material-icons-outlined role-chevron">expand_more</span>
+            </button>
+
+            @if (showRoleDropdown() === collab.id) {
+              <div class="role-dropdown">
+                <button class="role-option" [class.active]="collab.role === 'admin'" (click)="changeRole(collab.id, 'admin')">
+                  <span class="material-icons-outlined">admin_panel_settings</span>
+                  <div class="role-option-text">
+                    <span class="role-option-label">Admin</span>
+                    <span class="role-option-desc">Full access & manage users</span>
+                  </div>
+                  @if (collab.role === 'admin') {
+                    <span class="material-icons-outlined role-check">check</span>
+                  }
+                </button>
+                <button class="role-option" [class.active]="collab.role === 'editor'" (click)="changeRole(collab.id, 'editor')">
+                  <span class="material-icons-outlined">edit</span>
+                  <div class="role-option-text">
+                    <span class="role-option-label">Editor</span>
+                    <span class="role-option-desc">Can edit & comment</span>
+                  </div>
+                  @if (collab.role === 'editor') {
+                    <span class="material-icons-outlined role-check">check</span>
+                  }
+                </button>
+                <button class="role-option" [class.active]="collab.role === 'viewer'" (click)="changeRole(collab.id, 'viewer')">
+                  <span class="material-icons-outlined">visibility</span>
+                  <div class="role-option-text">
+                    <span class="role-option-label">Viewer</span>
+                    <span class="role-option-desc">Can only view</span>
+                  </div>
+                  @if (collab.role === 'viewer') {
+                    <span class="material-icons-outlined role-check">check</span>
+                  }
+                </button>
+                <div class="role-divider"></div>
+                <button class="role-option remove-option" (click)="removeCollaborator(collab.id)">
+                  <span class="material-icons-outlined">person_remove</span>
+                  <div class="role-option-text">
+                    <span class="role-option-label">Remove access</span>
+                  </div>
+                </button>
+              </div>
+            }
+          </div>
+        </div>
+      }
+    </div>
+  </div>
+</div>
