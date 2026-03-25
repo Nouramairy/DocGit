@@ -21,6 +21,7 @@ export class SideBar {
   addFolderClick = output<void>();
   addFileClick = output<string | null>();
   addSubFolderClick = output<DocFile>();
+  deleteItem = output<DocFile>();
 
   expandedFolders = signal<Set<string>>(new Set(['1', '4', '7']));
 

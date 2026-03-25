@@ -10,33 +10,33 @@
       </button>
     </div>
 
-    @if (deletedItems().length > 0) {
+    @if (items().length > 0) {
       <div class="panel-actions-bar">
-        <span class="items-count">{{ deletedItems().length }} items in trash</span>
-        <button class="empty-btn" (click)="emptyTrash()">
+        <span class="items-count">{{ items().length }} {{ items().length === 1 ? 'item' : 'items' }} in trash</span>
+        <button class="empty-btn" (click)="emptyTrash.emit()">
           <span class="material-icons-outlined">delete_forever</span>
           Empty Trash
         </button>
       </div>
 
       <div class="panel-body">
-        @for (item of deletedItems(); track item.id) {
+        @for (entry of items(); track entry.file.id) {
           <div class="deleted-item">
             <div class="deleted-item-info">
-              <span class="material-icons-outlined item-icon" [class.folder]="item.type === 'folder'">
-                {{ getIcon(item) }}
+              <span class="material-icons-outlined item-icon" [class.folder]="entry.file.type === 'folder'">
+                {{ getIcon(entry) }}
               </span>
               <div class="item-details">
-                <span class="item-name">{{ item.name }}</span>
-                <span class="item-path">{{ item.originalPath }}</span>
-                <span class="item-date">Deleted {{ formatDate(item.deletedAt) }}</span>
+                <span class="item-name">{{ entry.file.name }}</span>
+                <span class="item-path">{{ entry.path }}</span>
+                <span class="item-date">Deleted {{ formatDate(entry.deletedAt) }}</span>
               </div>
             </div>
             <div class="item-actions">
-              <button class="item-action-btn restore" (click)="restoreItem(item.id)" title="Restore">
+              <button class="item-action-btn restore" (click)="restore.emit(entry.file.id)" title="Restore">
                 <span class="material-icons-outlined">restore</span>
               </button>
-              <button class="item-action-btn delete" (click)="permanentDelete(item.id)" title="Delete permanently">
+              <button class="item-action-btn delete" (click)="permanentDelete.emit(entry.file.id)" title="Delete permanently">
                 <span class="material-icons-outlined">delete_forever</span>
               </button>
             </div>
@@ -47,7 +47,7 @@
       <div class="empty-trash">
         <span class="material-icons-outlined empty-icon">delete_outline</span>
         <p class="empty-text">Trash is empty</p>
-        <p class="empty-subtext">Deleted files will appear here</p>
+        <p class="empty-subtext">Deleted files and folders will appear here</p>
       </div>
     }
   </div>
