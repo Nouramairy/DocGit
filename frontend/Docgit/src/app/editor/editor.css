@@ -1,3 +1,8 @@
+:host {
+  display: block;
+  height: 100%;
+}
+
 .editor-container {
   display: flex;
   flex-direction: column;
@@ -60,7 +65,94 @@
 
 .doc-actions {
   display: flex;
+  align-items: center;
   gap: 8px;
+}
+
+/* ── Live Presence Bar ── */
+.presence-bar {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  padding-right: 4px;
+}
+
+.presence-avatar {
+  position: relative;
+  width: 30px;
+  height: 30px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 2px solid var(--color-bg);
+  margin-left: -6px;
+  cursor: default;
+  transition: transform var(--transition-fast);
+}
+
+.presence-avatar:first-child {
+  margin-left: 0;
+}
+
+.presence-avatar:hover {
+  transform: translateY(-2px);
+  z-index: 2;
+}
+
+.presence-avatar.typing {
+  box-shadow: 0 0 0 2px var(--color-accent-light);
+}
+
+.presence-initials {
+  font-size: 11px;
+  font-weight: 600;
+  color: white;
+  font-family: var(--font-display);
+}
+
+.typing-indicator {
+  position: absolute;
+  bottom: -4px;
+  left: 50%;
+  transform: translateX(-50%);
+  display: flex;
+  gap: 1.5px;
+  background: var(--color-bg);
+  padding: 1px 3px;
+  border-radius: 6px;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.12);
+}
+
+.typing-dot {
+  width: 3px;
+  height: 3px;
+  border-radius: 50%;
+  background: var(--color-accent);
+  animation: typingBounce 1.2s ease infinite;
+}
+
+.typing-dot:nth-child(2) { animation-delay: 0.15s; }
+.typing-dot:nth-child(3) { animation-delay: 0.3s; }
+
+@keyframes typingBounce {
+  0%, 80%, 100% { opacity: 0.3; transform: scale(0.8); }
+  40% { opacity: 1; transform: scale(1.1); }
+}
+
+.presence-count {
+  font-size: 11px;
+  font-weight: 500;
+  color: var(--color-text-tertiary);
+  margin-left: 6px;
+  white-space: nowrap;
+}
+
+.header-divider {
+  width: 1px;
+  height: 24px;
+  background: var(--color-border-light);
+  margin: 0 4px;
 }
 
 .action-btn {
@@ -157,8 +249,6 @@
 .editor-body {
   flex: 1;
   overflow-y: auto;
-  display: flex;
-  justify-content: center;
   padding: 32px 24px;
   background: var(--color-bg-secondary);
 }
@@ -166,7 +256,7 @@
 .editor-page {
   width: 100%;
   max-width: 816px;
-  min-height: 100%;
+  margin: 0 auto;
   background: var(--color-bg);
   border-radius: var(--radius-md);
   box-shadow: var(--shadow-md);
@@ -174,12 +264,13 @@
 }
 
 .editor-textarea {
+  display: block;
   width: 100%;
   min-height: 600px;
-  height: 100%;
   border: none;
   outline: none;
   resize: none;
+  overflow: hidden;
   font-family: var(--font-primary);
   font-size: 15px;
   line-height: 1.75;
@@ -223,6 +314,14 @@
 
 .status-item.saved .material-icons-outlined {
   color: var(--color-success);
+}
+
+.status-item.collab-status {
+  color: var(--color-accent);
+}
+
+.status-item.collab-status .material-icons-outlined {
+  color: var(--color-accent);
 }
 
 .status-separator {

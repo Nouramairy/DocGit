@@ -1,5 +1,13 @@
-import { Component, input, output, signal, computed, effect } from '@angular/core';
+import { Component, input, output, signal, computed, effect, ElementRef, inject } from '@angular/core';
 import { DocFile } from '../app';
+
+export interface PresenceUser {
+  id: string;
+  name: string;
+  initials: string;
+  color: string;
+  isTyping: boolean;
+}
 
 @Component({
   selector: 'app-editor',
@@ -8,8 +16,12 @@ import { DocFile } from '../app';
   styleUrl: './editor.css',
 })
 export class Editor {
+  private hostEl = inject(ElementRef);
+  private resizeTimer: any;
+
   file = input<DocFile | null>(null);
   contentChange = output<string>();
+  shareClick = output<void>();
 
   editableContent = signal('');
   wordCount = computed(() => {
@@ -19,22 +31,43 @@ export class Editor {
   });
 
   charCount = computed(() => this.editableContent().length);
-
   activeFormats = signal<Set<string>>(new Set());
+
+  activeUsers = signal<PresenceUser[]>([
+    { id: 'u2', name: 'Alice Chen', initials: 'AC', color: '#34a853', isTyping: true },
+    { id: 'u4', name: 'Carol Zhang', initials: 'CZ', color: '#fbbc05', isTyping: false },
+  ]);
 
   constructor() {
     effect(() => {
       const f = this.file();
       if (f) {
         this.editableContent.set(f.content || '');
+        this.scheduleResize();
       }
     });
+  }
+
+  private scheduleResize(): void {
+    clearTimeout(this.resizeTimer);
+    this.resizeTimer = setTimeout(() => {
+      const ta = this.hostEl.nativeElement.querySelector('.editor-textarea') as HTMLTextAreaElement | null;
+      if (ta) {
+        ta.value = this.editableContent();
+        ta.style.height = 'auto';
+        ta.style.height = Math.max(ta.scrollHeight, 600) + 'px';
+      } else {
+        this.scheduleResize();
+      }
+    }, 50);
   }
 
   onContentInput(event: Event): void {
     const el = event.target as HTMLTextAreaElement;
     this.editableContent.set(el.value);
     this.contentChange.emit(el.value);
+    el.style.height = 'auto';
+    el.style.height = Math.max(el.scrollHeight, 600) + 'px';
   }
 
   formatAction(action: string): void {
@@ -65,5 +98,9 @@ export class Editor {
     if (hours < 24) return `${hours}h ago`;
     if (days < 7) return `${days}d ago`;
     return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+  }
+
+  getPresenceTooltip(user: PresenceUser): string {
+    return user.name + (user.isTyping ? ' (typing...)' : ' (viewing)');
   }
 }

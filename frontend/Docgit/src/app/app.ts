@@ -8,6 +8,7 @@ import { SettingsPanel } from './settings-panel/settings-panel';
 import { Account } from './account/account';
 import { LogIn } from './log-in/log-in';
 import { AddSubFolder } from './add-sub-folder/add-sub-folder';
+import { CollaboratorPanel } from './collaborator-panel/collaborator-panel';
 
 export interface DocFile {
   id: string;
@@ -23,7 +24,7 @@ export interface DocFile {
 
 @Component({
   selector: 'app-root',
-  imports: [SideBar, SreachBar, Editor, AddFolder, AddSubFolder, DeletedItems, SettingsPanel, Account, LogIn],
+  imports: [SideBar, SreachBar, Editor, AddFolder, AddSubFolder, DeletedItems, SettingsPanel, Account, LogIn, CollaboratorPanel],
   templateUrl: './app.html',
   styleUrl: './app.css'
 })
@@ -39,6 +40,7 @@ export class App {
   protected showDeletedItems = signal(false);
   protected showSettings = signal(false);
   protected showAccount = signal(false);
+  protected showCollaborators = signal(false);
   protected searchQuery = signal('');
   protected activeFile = signal<DocFile | null>(null);
 

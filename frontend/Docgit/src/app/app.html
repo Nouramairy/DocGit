@@ -57,6 +57,7 @@
         <app-editor
           [file]="activeFile()"
           (contentChange)="onContentChange($event)"
+          (shareClick)="showCollaborators.set(true)"
         />
       </main>
     </div>
@@ -82,6 +83,12 @@
       [parentFolderId]="subFolderParent()!.id"
       (create)="onAddSubFolder($event)"
       (cancel)="showAddSubFolder.set(false)"
+    />
+  }
+
+  @if (showCollaborators()) {
+    <app-collaborator-panel
+      (close)="showCollaborators.set(false)"
     />
   }
 
