@@ -41,14 +41,15 @@
     <div class="main-content">
       <!-- Sidebar -->
       <aside class="sidebar" [class.collapsed]="sidebarCollapsed()">
-        <app-side-bar
-          [files]="files()"
-          [activeFile]="activeFile()"
-          [searchQuery]="searchQuery()"
-          (fileSelect)="onFileSelect($event)"
-          (addFolderClick)="showAddFolder.set(true)"
-          (addFileClick)="onAddFile($event)"
-        />
+      <app-side-bar
+        [files]="files()"
+        [activeFile]="activeFile()"
+        [searchQuery]="searchQuery()"
+        (fileSelect)="onFileSelect($event)"
+        (addFolderClick)="showAddFolder.set(true)"
+        (addFileClick)="onAddFile($event)"
+        (addSubFolderClick)="onRequestSubFolder($event)"
+      />
       </aside>
 
       <!-- Editor Area -->
@@ -72,6 +73,15 @@
   @if (showDeletedItems()) {
     <app-deleted-items
       (close)="showDeletedItems.set(false)"
+    />
+  }
+
+  @if (showAddSubFolder() && subFolderParent()) {
+    <app-add-sub-folder
+      [parentFolderName]="subFolderParent()!.name"
+      [parentFolderId]="subFolderParent()!.id"
+      (create)="onAddSubFolder($event)"
+      (cancel)="showAddSubFolder.set(false)"
     />
   }
 

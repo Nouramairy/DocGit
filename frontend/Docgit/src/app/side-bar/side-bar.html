@@ -12,58 +12,51 @@
     </div>
   </div>
 
-  <!-- File Tree -->
+  <!-- File Tree (flat rendering of recursive structure) -->
   <div class="file-tree">
-    @for (item of filteredFiles(); track item.id) {
-      <!-- Folder -->
-      @if (item.type === 'folder') {
-        <div class="tree-item folder-item">
-          <button
-            class="tree-row"
-            [class.active]="isActive(item)"
-            (click)="toggleFolder(item.id)"
-          >
-            <span class="material-icons-outlined chevron" [class.expanded]="isFolderExpanded(item.id)">
-              chevron_right
-            </span>
-            <span class="material-icons-outlined file-icon folder-icon">
-              {{ getFileIcon(item) }}
-            </span>
-            <span class="file-name">{{ item.name }}</span>
-            <button class="tree-add-btn" (click)="createFile(item.id); $event.stopPropagation()" title="Add file">
-              <span class="material-icons-outlined">add</span>
+    @for (node of flatTree(); track node.file.id) {
+      @if (node.file.type === 'folder') {
+        <div
+          class="tree-row"
+          role="treeitem"
+          tabindex="0"
+          [class.active]="isActive(node.file)"
+          [style.padding-left]="getIndentPx(node.depth, false)"
+          (click)="toggleFolder(node.file.id)"
+          (keydown.enter)="toggleFolder(node.file.id)"
+          [attr.aria-expanded]="isFolderExpanded(node.file.id)"
+        >
+          <span class="material-icons-outlined chevron" [class.expanded]="isFolderExpanded(node.file.id)">
+            chevron_right
+          </span>
+          <span class="material-icons-outlined file-icon folder-icon">
+            {{ getFileIcon(node.file) }}
+          </span>
+          <span class="file-name">{{ node.file.name }}</span>
+          <div class="tree-actions" (click)="$event.stopPropagation()">
+            <button class="tree-action-btn" (click)="createFile(node.file.id)" title="New file">
+              <span class="material-icons-outlined">note_add</span>
             </button>
-          </button>
-
-          @if (isFolderExpanded(item.id) && item.children) {
-            <div class="tree-children">
-              @for (child of item.children; track child.id) {
-                <button
-                  class="tree-row child-row"
-                  [class.active]="isActive(child)"
-                  (click)="selectFile(child)"
-                >
-                  <span class="material-icons-outlined file-icon doc-icon">
-                    {{ getFileIcon(child) }}
-                  </span>
-                  <span class="file-name">{{ child.name }}</span>
-                </button>
-              }
-            </div>
-          }
+            <button class="tree-action-btn" (click)="requestSubFolder(node.file)" title="New sub-folder">
+              <span class="material-icons-outlined">create_new_folder</span>
+            </button>
+          </div>
         </div>
       } @else {
-        <!-- Root-level File -->
-        <button
+        <div
           class="tree-row"
-          [class.active]="isActive(item)"
-          (click)="selectFile(item)"
+          role="treeitem"
+          tabindex="0"
+          [class.active]="isActive(node.file)"
+          [style.padding-left]="getIndentPx(node.depth, true)"
+          (click)="selectFile(node.file)"
+          (keydown.enter)="selectFile(node.file)"
         >
           <span class="material-icons-outlined file-icon doc-icon">
-            {{ getFileIcon(item) }}
+            {{ getFileIcon(node.file) }}
           </span>
-          <span class="file-name">{{ item.name }}</span>
-        </button>
+          <span class="file-name">{{ node.file.name }}</span>
+        </div>
       }
     }
   </div>

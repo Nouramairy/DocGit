@@ -7,6 +7,7 @@ import { DeletedItems } from './deleted-items/deleted-items';
 import { SettingsPanel } from './settings-panel/settings-panel';
 import { Account } from './account/account';
 import { LogIn } from './log-in/log-in';
+import { AddSubFolder } from './add-sub-folder/add-sub-folder';
 
 export interface DocFile {
   id: string;
@@ -22,7 +23,7 @@ export interface DocFile {
 
 @Component({
   selector: 'app-root',
-  imports: [SideBar, SreachBar, Editor, AddFolder, DeletedItems, SettingsPanel, Account, LogIn],
+  imports: [SideBar, SreachBar, Editor, AddFolder, AddSubFolder, DeletedItems, SettingsPanel, Account, LogIn],
   templateUrl: './app.html',
   styleUrl: './app.css'
 })
@@ -33,6 +34,8 @@ export class App {
   protected userEmail = signal('');
   protected sidebarCollapsed = signal(false);
   protected showAddFolder = signal(false);
+  protected showAddSubFolder = signal(false);
+  protected subFolderParent = signal<DocFile | null>(null);
   protected showDeletedItems = signal(false);
   protected showSettings = signal(false);
   protected showAccount = signal(false);
@@ -65,6 +68,44 @@ export class App {
           updatedAt: new Date('2026-03-22'),
           createdAt: new Date('2026-03-01'),
           content: '# Meeting Notes - March 22\n\n## Attendees\n- Alice\n- Bob\n- Charlie\n\n## Agenda\n1. Sprint review\n2. Architecture decisions\n3. Next steps\n\n## Action Items\n- [ ] Set up CI/CD pipeline\n- [ ] Review pull requests\n- [x] Update documentation'
+        },
+        {
+          id: '7',
+          name: 'Drafts',
+          type: 'folder',
+          parent: '1',
+          updatedAt: new Date('2026-03-23'),
+          createdAt: new Date('2026-03-10'),
+          children: [
+            {
+              id: '8',
+              name: 'Blog Post Draft.md',
+              type: 'file',
+              parent: '7',
+              updatedAt: new Date('2026-03-23'),
+              createdAt: new Date('2026-03-12'),
+              content: '# Introducing DocGit\n\nA blog post about the launch of DocGit...'
+            },
+            {
+              id: '9',
+              name: 'v2 Ideas',
+              type: 'folder',
+              parent: '7',
+              updatedAt: new Date('2026-03-21'),
+              createdAt: new Date('2026-03-15'),
+              children: [
+                {
+                  id: '10',
+                  name: 'Real-time Collab.md',
+                  type: 'file',
+                  parent: '9',
+                  updatedAt: new Date('2026-03-21'),
+                  createdAt: new Date('2026-03-15'),
+                  content: '# Real-time Collaboration\n\nIdeas for implementing real-time collaborative editing using CRDTs.'
+                }
+              ]
+            }
+          ]
         }
       ]
     },
@@ -142,6 +183,26 @@ export class App {
     };
     this.files.update(f => [...f, newFolder]);
     this.showAddFolder.set(false);
+  }
+
+  onRequestSubFolder(folder: DocFile): void {
+    this.subFolderParent.set(folder);
+    this.showAddSubFolder.set(true);
+  }
+
+  onAddSubFolder(event: { name: string; parentId: string }): void {
+    const newFolder: DocFile = {
+      id: Date.now().toString(),
+      name: event.name,
+      type: 'folder',
+      parent: event.parentId,
+      updatedAt: new Date(),
+      createdAt: new Date(),
+      children: []
+    };
+    this.files.update(files => this.addFileToFolder(files, event.parentId, newFolder));
+    this.showAddSubFolder.set(false);
+    this.subFolderParent.set(null);
   }
 
   onAddFile(parentId: string | null): void {

@@ -58,14 +58,14 @@
   gap: 4px;
   width: 100%;
   padding: 6px 16px;
+  padding-right: 8px;
   text-align: left;
   color: var(--color-text-primary);
   transition: background var(--transition-fast);
   position: relative;
   font-size: 13px;
-  border: none;
-  background: none;
   cursor: pointer;
+  user-select: none;
 }
 
 .tree-row:hover {
@@ -75,10 +75,6 @@
 .tree-row.active {
   background: var(--color-accent-bg);
   color: var(--color-accent);
-}
-
-.child-row {
-  padding-left: 44px;
 }
 
 .chevron {
@@ -112,32 +108,35 @@
   white-space: nowrap;
 }
 
-.tree-add-btn {
+.tree-actions {
   display: none;
+  align-items: center;
+  gap: 1px;
+  flex-shrink: 0;
+  margin-left: auto;
+}
+
+.tree-row:hover .tree-actions {
+  display: flex;
+}
+
+.tree-action-btn {
+  display: flex;
   align-items: center;
   justify-content: center;
   width: 22px;
   height: 22px;
   border-radius: var(--radius-sm);
   color: var(--color-text-tertiary);
-  flex-shrink: 0;
 }
 
-.tree-row:hover .tree-add-btn {
-  display: flex;
-}
-
-.tree-add-btn:hover {
+.tree-action-btn:hover {
   background: var(--color-bg-hover);
   color: var(--color-text-primary);
 }
 
-.tree-add-btn .material-icons-outlined {
-  font-size: 16px;
-}
-
-.tree-children {
-  overflow: hidden;
+.tree-action-btn .material-icons-outlined {
+  font-size: 15px;
 }
 
 /* ── Sidebar Footer ── */
