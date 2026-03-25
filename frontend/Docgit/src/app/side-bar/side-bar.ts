@@ -1,4 +1,4 @@
-import { Component, input, output, signal, computed } from '@angular/core';
+import { Component, input, output, signal, computed, ElementRef, viewChild } from '@angular/core';
 import { DocFile } from '../app';
 
 export interface FlatTreeItem {
@@ -22,8 +22,11 @@ export class SideBar {
   addFileClick = output<string | null>();
   addSubFolderClick = output<DocFile>();
   deleteItem = output<DocFile>();
+  renameItem = output<{ id: string; newName: string }>();
 
   expandedFolders = signal<Set<string>>(new Set(['1', '4', '7']));
+  renamingId = signal<string | null>(null);
+  renameValue = signal('');
 
   flatTree = computed<FlatTreeItem[]>(() => {
     const query = this.searchQuery().toLowerCase();
@@ -66,6 +69,45 @@ export class SideBar {
       return next;
     });
     this.addSubFolderClick.emit(folder);
+  }
+
+  startRename(file: DocFile, event: MouseEvent): void {
+    event.stopPropagation();
+    this.renamingId.set(file.id);
+    this.renameValue.set(file.name);
+    setTimeout(() => {
+      const input = document.querySelector('.rename-input') as HTMLInputElement;
+      if (input) {
+        input.focus();
+        const dotIndex = file.name.lastIndexOf('.');
+        input.setSelectionRange(0, dotIndex > 0 ? dotIndex : file.name.length);
+      }
+    });
+  }
+
+  confirmRename(): void {
+    const id = this.renamingId();
+    const name = this.renameValue().trim();
+    if (id && name) {
+      this.renameItem.emit({ id, newName: name });
+    }
+    this.renamingId.set(null);
+  }
+
+  cancelRename(): void {
+    this.renamingId.set(null);
+  }
+
+  onRenameKeydown(event: KeyboardEvent): void {
+    if (event.key === 'Enter') {
+      this.confirmRename();
+    } else if (event.key === 'Escape') {
+      this.cancelRename();
+    }
+  }
+
+  onRenameInput(event: Event): void {
+    this.renameValue.set((event.target as HTMLInputElement).value);
   }
 
   getFileIcon(file: DocFile): string {

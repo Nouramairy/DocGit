@@ -44,6 +44,8 @@ export class App {
   protected searchQuery = signal('');
   protected activeFile = signal<DocFile | null>(null);
   protected deletedFiles = signal<{ file: DocFile; path: string; deletedAt: Date }[]>([]);
+  protected showAddFile = signal(false);
+  protected addFileParentId = signal<string | null>(null);
 
   protected files = signal<DocFile[]>([
     {
@@ -209,9 +211,16 @@ export class App {
   }
 
   onAddFile(parentId: string | null): void {
+    this.addFileParentId.set(parentId);
+    this.showAddFile.set(true);
+  }
+
+  onCreateFile(name: string): void {
+    const parentId = this.addFileParentId();
+    const fileName = name.endsWith('.md') ? name : name + '.md';
     const newFile: DocFile = {
       id: Date.now().toString(),
-      name: 'Untitled Document.md',
+      name: fileName,
       type: 'file',
       parent: parentId,
       updatedAt: new Date(),
@@ -224,6 +233,16 @@ export class App {
       this.files.update(f => [...f, newFile]);
     }
     this.activeFile.set(newFile);
+    this.showAddFile.set(false);
+    this.addFileParentId.set(null);
+  }
+
+  onRenameItem(event: { id: string; newName: string }): void {
+    this.files.update(files => this.renameInTree(files, event.id, event.newName));
+    const active = this.activeFile();
+    if (active && active.id === event.id) {
+      this.activeFile.set({ ...active, name: event.newName });
+    }
   }
 
   onContentChange(content: string): void {
@@ -295,6 +314,18 @@ export class App {
       }
       if (f.children) {
         return { ...f, children: this.addFileToFolder(f.children, folderId, newFile) };
+      }
+      return f;
+    });
+  }
+
+  private renameInTree(files: DocFile[], id: string, newName: string): DocFile[] {
+    return files.map(f => {
+      if (f.id === id) {
+        return { ...f, name: newName, updatedAt: new Date() };
+      }
+      if (f.children) {
+        return { ...f, children: this.renameInTree(f.children, id, newName) };
       }
       return f;
     });

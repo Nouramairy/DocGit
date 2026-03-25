@@ -1,23 +1,30 @@
 <div class="modal-overlay" (click)="onOverlayClick($event)">
   <div class="modal-dialog">
     <div class="modal-header">
-      <span class="material-icons-outlined modal-icon">create_new_folder</span>
-      <h2 class="modal-title">New Folder</h2>
+      <span class="material-icons-outlined modal-icon">
+        {{ mode() === 'file' ? 'note_add' : 'create_new_folder' }}
+      </span>
+      <h2 class="modal-title">{{ mode() === 'file' ? 'New Document' : 'New Folder' }}</h2>
     </div>
 
     <div class="modal-body">
-      <label class="input-label" for="folderName">Folder name</label>
+      <label class="input-label" for="folderName">
+        {{ mode() === 'file' ? 'Document name' : 'Folder name' }}
+      </label>
       <input
         #nameInput
         id="folderName"
         type="text"
         class="text-input"
-        placeholder="Enter folder name..."
+        [placeholder]="mode() === 'file' ? 'Enter document name...' : 'Enter folder name...'"
         [value]="folderName()"
         (input)="onInput($event)"
         (keydown)="onKeydown($event)"
         autocomplete="off"
       />
+      @if (mode() === 'file') {
+        <span class="input-hint">.md extension will be added automatically</span>
+      }
     </div>
 
     <div class="modal-footer">
