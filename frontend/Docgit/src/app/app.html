@@ -50,6 +50,7 @@
         (addFileClick)="onAddFile($event)"
         (addSubFolderClick)="onRequestSubFolder($event)"
         (deleteItem)="onDeleteItem($event)"
+        (renameItem)="onRenameItem($any($event))"
       />
       </aside>
 
@@ -69,6 +70,14 @@
     <app-add-folder
       (create)="onAddFolder($event)"
       (cancel)="showAddFolder.set(false)"
+    />
+  }
+
+  @if (showAddFile()) {
+    <app-add-folder
+      [mode]="'file'"
+      (create)="onCreateFile($event)"
+      (cancel)="showAddFile.set(false)"
     />
   }
 

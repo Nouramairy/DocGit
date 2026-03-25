@@ -1,4 +1,4 @@
-import { Component, output, signal, ElementRef, viewChild, afterNextRender } from '@angular/core';
+import { Component, input, output, signal, ElementRef, viewChild, afterNextRender } from '@angular/core';
 
 @Component({
   selector: 'app-add-folder',
@@ -7,6 +7,7 @@ import { Component, output, signal, ElementRef, viewChild, afterNextRender } fro
   styleUrl: './add-folder.css',
 })
 export class AddFolder {
+  mode = input<'folder' | 'file'>('folder');
   create = output<string>();
   cancel = output<void>();
 

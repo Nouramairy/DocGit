@@ -32,13 +32,27 @@
           <span class="material-icons-outlined file-icon folder-icon">
             {{ getFileIcon(node.file) }}
           </span>
-          <span class="file-name">{{ node.file.name }}</span>
+          @if (renamingId() === node.file.id) {
+            <input
+              class="rename-input"
+              [value]="renameValue()"
+              (input)="onRenameInput($event)"
+              (keydown)="onRenameKeydown($event)"
+              (blur)="confirmRename()"
+              (click)="$event.stopPropagation()"
+            />
+          } @else {
+            <span class="file-name" (dblclick)="startRename(node.file, $event)">{{ node.file.name }}</span>
+          }
           <div class="tree-actions" (click)="$event.stopPropagation()">
             <button class="tree-action-btn" (click)="createFile(node.file.id)" title="New file">
               <span class="material-icons-outlined">note_add</span>
             </button>
             <button class="tree-action-btn" (click)="requestSubFolder(node.file)" title="New sub-folder">
               <span class="material-icons-outlined">create_new_folder</span>
+            </button>
+            <button class="tree-action-btn" (click)="startRename(node.file, $event)" title="Rename">
+              <span class="material-icons-outlined">edit</span>
             </button>
             <button class="tree-action-btn delete-btn" (click)="deleteItem.emit(node.file)" title="Delete folder">
               <span class="material-icons-outlined">delete_outline</span>
@@ -58,8 +72,22 @@
           <span class="material-icons-outlined file-icon doc-icon">
             {{ getFileIcon(node.file) }}
           </span>
-          <span class="file-name">{{ node.file.name }}</span>
+          @if (renamingId() === node.file.id) {
+            <input
+              class="rename-input"
+              [value]="renameValue()"
+              (input)="onRenameInput($event)"
+              (keydown)="onRenameKeydown($event)"
+              (blur)="confirmRename()"
+              (click)="$event.stopPropagation()"
+            />
+          } @else {
+            <span class="file-name" (dblclick)="startRename(node.file, $event)">{{ node.file.name }}</span>
+          }
           <div class="tree-actions" (click)="$event.stopPropagation()">
+            <button class="tree-action-btn" (click)="startRename(node.file, $event)" title="Rename">
+              <span class="material-icons-outlined">edit</span>
+            </button>
             <button class="tree-action-btn delete-btn" (click)="deleteItem.emit(node.file)" title="Delete file">
               <span class="material-icons-outlined">delete_outline</span>
             </button>
