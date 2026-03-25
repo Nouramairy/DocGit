@@ -5,6 +5,8 @@ VisualStudioVersion = 17.14.37012.4 d17.14
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Docgit", "Docgit.csproj", "{64C9E51F-BF53-496C-BB06-6FC4A8436F32}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DocGit.Domain", "..\DocGit.Domain\DocGit.Domain.csproj", "{98D1998C-D812-49D5-8F2F-2CEC2800173E}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -15,6 +17,10 @@ Global
 		{64C9E51F-BF53-496C-BB06-6FC4A8436F32}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{64C9E51F-BF53-496C-BB06-6FC4A8436F32}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{64C9E51F-BF53-496C-BB06-6FC4A8436F32}.Release|Any CPU.Build.0 = Release|Any CPU
+		{98D1998C-D812-49D5-8F2F-2CEC2800173E}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{98D1998C-D812-49D5-8F2F-2CEC2800173E}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{98D1998C-D812-49D5-8F2F-2CEC2800173E}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{98D1998C-D812-49D5-8F2F-2CEC2800173E}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
