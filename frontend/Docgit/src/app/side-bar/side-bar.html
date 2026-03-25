@@ -40,6 +40,9 @@
             <button class="tree-action-btn" (click)="requestSubFolder(node.file)" title="New sub-folder">
               <span class="material-icons-outlined">create_new_folder</span>
             </button>
+            <button class="tree-action-btn delete-btn" (click)="deleteItem.emit(node.file)" title="Delete folder">
+              <span class="material-icons-outlined">delete_outline</span>
+            </button>
           </div>
         </div>
       } @else {
@@ -56,6 +59,11 @@
             {{ getFileIcon(node.file) }}
           </span>
           <span class="file-name">{{ node.file.name }}</span>
+          <div class="tree-actions" (click)="$event.stopPropagation()">
+            <button class="tree-action-btn delete-btn" (click)="deleteItem.emit(node.file)" title="Delete file">
+              <span class="material-icons-outlined">delete_outline</span>
+            </button>
+          </div>
         </div>
       }
     }

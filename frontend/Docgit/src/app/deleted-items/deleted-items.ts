@@ -1,11 +1,10 @@
-import { Component, output, signal } from '@angular/core';
+import { Component, input, output } from '@angular/core';
+import { DocFile } from '../app';
 
-interface DeletedItem {
-  id: string;
-  name: string;
-  type: 'file' | 'folder';
+export interface DeletedEntry {
+  file: DocFile;
+  path: string;
   deletedAt: Date;
-  originalPath: string;
 }
 
 @Component({
@@ -15,50 +14,29 @@ interface DeletedItem {
   styleUrl: './deleted-items.css',
 })
 export class DeletedItems {
+  items = input<DeletedEntry[]>([]);
+
   close = output<void>();
+  restore = output<string>();
+  permanentDelete = output<string>();
+  emptyTrash = output<void>();
 
-  deletedItems = signal<DeletedItem[]>([
-    {
-      id: 'd1',
-      name: 'Old Draft.md',
-      type: 'file',
-      deletedAt: new Date('2026-03-20'),
-      originalPath: 'My Documents/Old Draft.md'
-    },
-    {
-      id: 'd2',
-      name: 'Archive',
-      type: 'folder',
-      deletedAt: new Date('2026-03-15'),
-      originalPath: 'Archive'
-    },
-    {
-      id: 'd3',
-      name: 'Notes 2025.md',
-      type: 'file',
-      deletedAt: new Date('2026-03-10'),
-      originalPath: 'Research/Notes 2025.md'
-    }
-  ]);
-
-  getIcon(item: DeletedItem): string {
-    return item.type === 'folder' ? 'folder' : 'article';
+  getIcon(entry: DeletedEntry): string {
+    return entry.file.type === 'folder' ? 'folder' : 'article';
   }
 
   formatDate(date: Date): string {
+    const now = new Date();
+    const diff = now.getTime() - date.getTime();
+    const minutes = Math.floor(diff / 60000);
+    const hours = Math.floor(diff / 3600000);
+    const days = Math.floor(diff / 86400000);
+
+    if (minutes < 1) return 'Just now';
+    if (minutes < 60) return `${minutes}m ago`;
+    if (hours < 24) return `${hours}h ago`;
+    if (days < 7) return `${days}d ago`;
     return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
-  }
-
-  restoreItem(id: string): void {
-    this.deletedItems.update(items => items.filter(i => i.id !== id));
-  }
-
-  permanentDelete(id: string): void {
-    this.deletedItems.update(items => items.filter(i => i.id !== id));
-  }
-
-  emptyTrash(): void {
-    this.deletedItems.set([]);
   }
 
   onOverlayClick(event: MouseEvent): void {

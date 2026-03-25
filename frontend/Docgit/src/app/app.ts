@@ -43,6 +43,7 @@ export class App {
   protected showCollaborators = signal(false);
   protected searchQuery = signal('');
   protected activeFile = signal<DocFile | null>(null);
+  protected deletedFiles = signal<{ file: DocFile; path: string; deletedAt: Date }[]>([]);
 
   protected files = signal<DocFile[]>([
     {
@@ -232,6 +233,59 @@ export class App {
       this.activeFile.set(updated);
       this.files.update(files => this.updateFileInTree(files, updated));
     }
+  }
+
+  onDeleteItem(item: DocFile): void {
+    const path = this.getItemPath(this.files(), item.id);
+    this.deletedFiles.update(list => [
+      { file: item, path, deletedAt: new Date() },
+      ...list
+    ]);
+    this.files.update(files => this.removeFromTree(files, item.id));
+    if (this.activeFile()?.id === item.id) {
+      this.activeFile.set(null);
+    }
+  }
+
+  onRestoreItem(id: string): void {
+    const entry = this.deletedFiles().find(d => d.file.id === id);
+    if (!entry) return;
+    const file = entry.file;
+    if (file.parent) {
+      this.files.update(files => this.addFileToFolder(files, file.parent!, file));
+    } else {
+      this.files.update(f => [...f, file]);
+    }
+    this.deletedFiles.update(list => list.filter(d => d.file.id !== id));
+  }
+
+  onPermanentDelete(id: string): void {
+    this.deletedFiles.update(list => list.filter(d => d.file.id !== id));
+  }
+
+  onEmptyTrash(): void {
+    this.deletedFiles.set([]);
+  }
+
+  private removeFromTree(files: DocFile[], id: string): DocFile[] {
+    return files
+      .filter(f => f.id !== id)
+      .map(f => f.children
+        ? { ...f, children: this.removeFromTree(f.children, id) }
+        : f
+      );
+  }
+
+  private getItemPath(files: DocFile[], targetId: string, prefix = ''): string {
+    for (const f of files) {
+      const currentPath = prefix ? `${prefix}/${f.name}` : f.name;
+      if (f.id === targetId) return currentPath;
+      if (f.children) {
+        const found = this.getItemPath(f.children, targetId, currentPath);
+        if (found) return found;
+      }
+    }
+    return '';
   }
 
   private addFileToFolder(files: DocFile[], folderId: string, newFile: DocFile): DocFile[] {

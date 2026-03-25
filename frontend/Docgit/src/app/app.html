@@ -49,6 +49,7 @@
         (addFolderClick)="showAddFolder.set(true)"
         (addFileClick)="onAddFile($event)"
         (addSubFolderClick)="onRequestSubFolder($event)"
+        (deleteItem)="onDeleteItem($event)"
       />
       </aside>
 
@@ -73,7 +74,11 @@
 
   @if (showDeletedItems()) {
     <app-deleted-items
+      [items]="deletedFiles()"
       (close)="showDeletedItems.set(false)"
+      (restore)="onRestoreItem($event)"
+      (permanentDelete)="onPermanentDelete($event)"
+      (emptyTrash)="onEmptyTrash()"
     />
   }
 

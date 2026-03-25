@@ -135,6 +135,11 @@
   color: var(--color-text-primary);
 }
 
+.tree-action-btn.delete-btn:hover {
+  background: var(--color-danger-bg);
+  color: var(--color-danger);
+}
+
 .tree-action-btn .material-icons-outlined {
   font-size: 15px;
 }
