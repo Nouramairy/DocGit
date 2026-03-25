@@ -1,0 +1,201 @@
+.panel-overlay {
+  position: fixed;
+  inset: 0;
+  background: var(--color-overlay);
+  display: flex;
+  justify-content: flex-end;
+  z-index: 1000;
+  animation: fadeIn 150ms ease;
+}
+
+.panel-slide {
+  width: 440px;
+  max-width: 90vw;
+  height: 100%;
+  background: var(--color-bg);
+  box-shadow: var(--shadow-xl);
+  display: flex;
+  flex-direction: column;
+  animation: slideIn 250ms ease;
+}
+
+.panel-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 20px 20px 16px;
+  border-bottom: 1px solid var(--color-border-light);
+}
+
+.panel-title-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.panel-icon {
+  font-size: 24px;
+  color: var(--color-text-secondary);
+}
+
+.panel-title {
+  font-family: var(--font-display);
+  font-size: 18px;
+  font-weight: 500;
+}
+
+.close-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  border-radius: var(--radius-full);
+  color: var(--color-text-secondary);
+  transition: background var(--transition-fast);
+}
+
+.close-btn:hover {
+  background: var(--color-bg-tertiary);
+}
+
+/* ── Tabs ── */
+.settings-tabs {
+  display: flex;
+  padding: 0 20px;
+  border-bottom: 1px solid var(--color-border-light);
+}
+
+.tab-btn {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 12px 16px;
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--color-text-secondary);
+  border-bottom: 2px solid transparent;
+  transition: color var(--transition-fast), border-color var(--transition-fast);
+}
+
+.tab-btn:hover {
+  color: var(--color-text-primary);
+}
+
+.tab-btn.active {
+  color: var(--color-accent);
+  border-bottom-color: var(--color-accent);
+}
+
+.tab-btn .material-icons-outlined {
+  font-size: 18px;
+}
+
+/* ── Settings Body ── */
+.panel-body {
+  flex: 1;
+  overflow-y: auto;
+  padding: 8px 0;
+}
+
+.setting-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 14px 20px;
+  transition: background var(--transition-fast);
+}
+
+.setting-row:hover {
+  background: var(--color-bg-secondary);
+}
+
+.setting-info {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  flex: 1;
+}
+
+.setting-icon {
+  font-size: 20px;
+  color: var(--color-text-tertiary);
+  margin-top: 1px;
+}
+
+.setting-text {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.setting-label {
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--color-text-primary);
+}
+
+.setting-desc {
+  font-size: 12px;
+  color: var(--color-text-tertiary);
+}
+
+/* ── Toggle Switch ── */
+.toggle {
+  position: relative;
+  width: 44px;
+  height: 24px;
+  border-radius: var(--radius-full);
+  background: var(--color-bg-hover);
+  border: none;
+  cursor: pointer;
+  transition: background var(--transition-fast);
+  flex-shrink: 0;
+  padding: 0;
+}
+
+.toggle.on {
+  background: var(--color-accent);
+}
+
+.toggle-knob {
+  position: absolute;
+  top: 3px;
+  left: 3px;
+  width: 18px;
+  height: 18px;
+  border-radius: var(--radius-full);
+  background: white;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
+  transition: transform var(--transition-fast);
+}
+
+.toggle.on .toggle-knob {
+  transform: translateX(20px);
+}
+
+/* ── Footer ── */
+.panel-footer {
+  padding: 12px 20px;
+  border-top: 1px solid var(--color-border-light);
+  text-align: center;
+}
+
+.version-text {
+  font-size: 11px;
+  color: var(--color-text-tertiary);
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes slideIn {
+  from {
+    transform: translateX(100%);
+  }
+  to {
+    transform: translateX(0);
+  }
+}

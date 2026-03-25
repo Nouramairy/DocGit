@@ -1,0 +1,112 @@
+<div class="panel-overlay" (click)="onOverlayClick($event)">
+  <div class="panel-slide">
+    <div class="panel-header">
+      <div class="panel-title-row">
+        <span class="material-icons-outlined panel-icon">settings</span>
+        <h2 class="panel-title">Settings</h2>
+      </div>
+      <button class="close-btn" (click)="close.emit()">
+        <span class="material-icons-outlined">close</span>
+      </button>
+    </div>
+
+    <!-- Tabs -->
+    <div class="settings-tabs">
+      <button
+        class="tab-btn"
+        [class.active]="activeTab() === 'general'"
+        (click)="activeTab.set('general')"
+      >
+        <span class="material-icons-outlined">tune</span>
+        General
+      </button>
+      <button
+        class="tab-btn"
+        [class.active]="activeTab() === 'editor'"
+        (click)="activeTab.set('editor')"
+      >
+        <span class="material-icons-outlined">edit_note</span>
+        Editor
+      </button>
+      <button
+        class="tab-btn"
+        [class.active]="activeTab() === 'git'"
+        (click)="activeTab.set('git')"
+      >
+        <span class="material-icons-outlined">commit</span>
+        Git
+      </button>
+    </div>
+
+    <!-- Settings Content -->
+    <div class="panel-body">
+      @if (activeTab() === 'general') {
+        @for (setting of generalSettings(); track setting.id) {
+          <div class="setting-row">
+            <div class="setting-info">
+              <span class="material-icons-outlined setting-icon">{{ setting.icon }}</span>
+              <div class="setting-text">
+                <span class="setting-label">{{ setting.label }}</span>
+                <span class="setting-desc">{{ setting.description }}</span>
+              </div>
+            </div>
+            <button
+              class="toggle"
+              [class.on]="setting.enabled"
+              (click)="toggleSetting('generalSettings', setting.id)"
+            >
+              <span class="toggle-knob"></span>
+            </button>
+          </div>
+        }
+      }
+
+      @if (activeTab() === 'editor') {
+        @for (setting of editorSettings(); track setting.id) {
+          <div class="setting-row">
+            <div class="setting-info">
+              <span class="material-icons-outlined setting-icon">{{ setting.icon }}</span>
+              <div class="setting-text">
+                <span class="setting-label">{{ setting.label }}</span>
+                <span class="setting-desc">{{ setting.description }}</span>
+              </div>
+            </div>
+            <button
+              class="toggle"
+              [class.on]="setting.enabled"
+              (click)="toggleSetting('editorSettings', setting.id)"
+            >
+              <span class="toggle-knob"></span>
+            </button>
+          </div>
+        }
+      }
+
+      @if (activeTab() === 'git') {
+        @for (setting of gitSettings(); track setting.id) {
+          <div class="setting-row">
+            <div class="setting-info">
+              <span class="material-icons-outlined setting-icon">{{ setting.icon }}</span>
+              <div class="setting-text">
+                <span class="setting-label">{{ setting.label }}</span>
+                <span class="setting-desc">{{ setting.description }}</span>
+              </div>
+            </div>
+            <button
+              class="toggle"
+              [class.on]="setting.enabled"
+              (click)="toggleSetting('gitSettings', setting.id)"
+            >
+              <span class="toggle-knob"></span>
+            </button>
+          </div>
+        }
+      }
+    </div>
+
+    <!-- Footer -->
+    <div class="panel-footer">
+      <span class="version-text">DocGit v0.1.0</span>
+    </div>
+  </div>
+</div>

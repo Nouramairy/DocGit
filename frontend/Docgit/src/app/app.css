@@ -1,0 +1,136 @@
+.app-shell {
+  display: flex;
+  flex-direction: column;
+  height: 100vh;
+  width: 100vw;
+  overflow: hidden;
+}
+
+/* ── Top Bar ── */
+.topbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  height: var(--topbar-height);
+  padding: 0 12px;
+  background: var(--color-bg);
+  border-bottom: 1px solid var(--color-border-light);
+  z-index: 100;
+  flex-shrink: 0;
+}
+
+.topbar-left {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-width: 200px;
+}
+
+.logo {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.logo-icon {
+  color: var(--color-accent);
+  font-size: 28px;
+}
+
+.logo-text {
+  font-family: var(--font-display);
+  font-size: 20px;
+  font-weight: 500;
+  color: var(--color-text-primary);
+  letter-spacing: -0.3px;
+}
+
+.topbar-center {
+  flex: 1;
+  max-width: 720px;
+  margin: 0 24px;
+}
+
+.topbar-right {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  min-width: 200px;
+  justify-content: flex-end;
+}
+
+.icon-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  height: 40px;
+  border-radius: var(--radius-full);
+  color: var(--color-text-secondary);
+  transition: background var(--transition-fast), color var(--transition-fast);
+}
+
+.icon-btn:hover {
+  background: var(--color-bg-tertiary);
+  color: var(--color-text-primary);
+}
+
+.avatar-wrapper {
+  position: relative;
+  margin-left: 8px;
+}
+
+.avatar {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  border-radius: var(--radius-full);
+  background: linear-gradient(135deg, #4285f4, #34a853);
+  color: white;
+  cursor: pointer;
+  padding: 0;
+  border: 2px solid transparent;
+  transition: border-color var(--transition-fast), box-shadow var(--transition-fast);
+}
+
+.avatar:hover {
+  border-color: var(--color-accent-light);
+  box-shadow: 0 0 0 2px var(--color-accent-light);
+}
+
+.avatar-initials {
+  font-family: var(--font-display);
+  font-size: 13px;
+  font-weight: 600;
+  letter-spacing: 0.5px;
+}
+
+/* ── Main Layout ── */
+.main-content {
+  display: flex;
+  flex: 1;
+  overflow: hidden;
+}
+
+.sidebar {
+  width: var(--sidebar-width);
+  flex-shrink: 0;
+  border-right: 1px solid var(--color-border-light);
+  background: var(--color-bg);
+  transition: width var(--transition-normal), opacity var(--transition-normal);
+  overflow: hidden;
+}
+
+.sidebar.collapsed {
+  width: 0;
+  opacity: 0;
+  pointer-events: none;
+}
+
+.editor-area {
+  flex: 1;
+  overflow: hidden;
+  background: var(--color-bg-secondary);
+}

@@ -1,0 +1,17 @@
+<div class="search-container" [class.focused]="focused()">
+  <span class="material-icons-outlined search-icon">search</span>
+  <input
+    type="text"
+    class="search-input"
+    placeholder="Search files and documents..."
+    [value]="query()"
+    (input)="onInput($event)"
+    (focus)="focused.set(true)"
+    (blur)="focused.set(false)"
+  />
+  @if (query()) {
+    <button class="clear-btn" (click)="clearSearch()">
+      <span class="material-icons-outlined">close</span>
+    </button>
+  }
+</div>

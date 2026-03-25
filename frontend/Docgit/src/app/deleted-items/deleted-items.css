@@ -1,0 +1,238 @@
+.panel-overlay {
+  position: fixed;
+  inset: 0;
+  background: var(--color-overlay);
+  display: flex;
+  justify-content: flex-end;
+  z-index: 1000;
+  animation: fadeIn 150ms ease;
+}
+
+.panel-slide {
+  width: 420px;
+  max-width: 90vw;
+  height: 100%;
+  background: var(--color-bg);
+  box-shadow: var(--shadow-xl);
+  display: flex;
+  flex-direction: column;
+  animation: slideIn 250ms ease;
+}
+
+.panel-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 20px 20px 16px;
+  border-bottom: 1px solid var(--color-border-light);
+}
+
+.panel-title-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.panel-icon {
+  font-size: 24px;
+  color: var(--color-text-secondary);
+}
+
+.panel-title {
+  font-family: var(--font-display);
+  font-size: 18px;
+  font-weight: 500;
+}
+
+.close-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  border-radius: var(--radius-full);
+  color: var(--color-text-secondary);
+  transition: background var(--transition-fast);
+}
+
+.close-btn:hover {
+  background: var(--color-bg-tertiary);
+}
+
+.panel-actions-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 12px 20px;
+  border-bottom: 1px solid var(--color-border-light);
+}
+
+.items-count {
+  font-size: 12px;
+  color: var(--color-text-tertiary);
+}
+
+.empty-btn {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  padding: 6px 12px;
+  border-radius: var(--radius-md);
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--color-danger);
+  transition: background var(--transition-fast);
+}
+
+.empty-btn:hover {
+  background: var(--color-danger-bg);
+}
+
+.empty-btn .material-icons-outlined {
+  font-size: 16px;
+}
+
+.panel-body {
+  flex: 1;
+  overflow-y: auto;
+  padding: 8px 0;
+}
+
+.deleted-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 12px 20px;
+  transition: background var(--transition-fast);
+}
+
+.deleted-item:hover {
+  background: var(--color-bg-secondary);
+}
+
+.deleted-item-info {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  flex: 1;
+  min-width: 0;
+}
+
+.item-icon {
+  font-size: 20px;
+  color: var(--color-text-tertiary);
+  margin-top: 2px;
+  flex-shrink: 0;
+}
+
+.item-icon.folder {
+  color: var(--color-warning);
+}
+
+.item-details {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+
+.item-name {
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--color-text-primary);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.item-path {
+  font-size: 11px;
+  color: var(--color-text-tertiary);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.item-date {
+  font-size: 11px;
+  color: var(--color-text-tertiary);
+}
+
+.item-actions {
+  display: flex;
+  gap: 4px;
+  opacity: 0;
+  transition: opacity var(--transition-fast);
+  flex-shrink: 0;
+}
+
+.deleted-item:hover .item-actions {
+  opacity: 1;
+}
+
+.item-action-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  border-radius: var(--radius-sm);
+  color: var(--color-text-secondary);
+  transition: background var(--transition-fast), color var(--transition-fast);
+}
+
+.item-action-btn.restore:hover {
+  background: var(--color-success-bg);
+  color: var(--color-success);
+}
+
+.item-action-btn.delete:hover {
+  background: var(--color-danger-bg);
+  color: var(--color-danger);
+}
+
+.item-action-btn .material-icons-outlined {
+  font-size: 18px;
+}
+
+.empty-trash {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  flex: 1;
+  padding: 48px 24px;
+  text-align: center;
+}
+
+.empty-icon {
+  font-size: 48px;
+  color: var(--color-text-tertiary);
+  margin-bottom: 16px;
+}
+
+.empty-text {
+  font-size: 16px;
+  font-weight: 500;
+  color: var(--color-text-secondary);
+  margin-bottom: 4px;
+}
+
+.empty-subtext {
+  font-size: 13px;
+  color: var(--color-text-tertiary);
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes slideIn {
+  from {
+    transform: translateX(100%);
+  }
+  to {
+    transform: translateX(0);
+  }
+}
