@@ -1,0 +1,183 @@
+@if (file()) {
+  <div class="editor-container">
+    <!-- Document Header -->
+    <div class="editor-header">
+      <div class="doc-info">
+        <span class="material-icons-outlined doc-type-icon">article</span>
+        <div class="doc-meta">
+          <h1 class="doc-title">{{ file()!.name }}</h1>
+          <div class="doc-details">
+            <span class="detail-item">
+              <span class="material-icons-outlined">schedule</span>
+              Edited {{ getRelativeTime(file()!.updatedAt) }}
+            </span>
+            <span class="detail-separator">·</span>
+            <span class="detail-item">
+              <span class="material-icons-outlined">history</span>
+              3 versions
+            </span>
+          </div>
+        </div>
+      </div>
+      <div class="doc-actions">
+        <button class="action-btn">
+          <span class="material-icons-outlined">share</span>
+          Share
+        </button>
+        <button class="action-btn primary">
+          <span class="material-icons-outlined">save</span>
+          Commit
+        </button>
+      </div>
+    </div>
+
+    <!-- Formatting Toolbar -->
+    <div class="toolbar">
+      <div class="toolbar-group">
+        <button
+          class="toolbar-btn"
+          [class.active]="isFormatActive('bold')"
+          (click)="formatAction('bold')"
+          title="Bold"
+        >
+          <span class="material-icons-outlined">format_bold</span>
+        </button>
+        <button
+          class="toolbar-btn"
+          [class.active]="isFormatActive('italic')"
+          (click)="formatAction('italic')"
+          title="Italic"
+        >
+          <span class="material-icons-outlined">format_italic</span>
+        </button>
+        <button
+          class="toolbar-btn"
+          [class.active]="isFormatActive('underline')"
+          (click)="formatAction('underline')"
+          title="Underline"
+        >
+          <span class="material-icons-outlined">format_underlined</span>
+        </button>
+        <button
+          class="toolbar-btn"
+          [class.active]="isFormatActive('strikethrough')"
+          (click)="formatAction('strikethrough')"
+          title="Strikethrough"
+        >
+          <span class="material-icons-outlined">strikethrough_s</span>
+        </button>
+      </div>
+
+      <div class="toolbar-divider"></div>
+
+      <div class="toolbar-group">
+        <button class="toolbar-btn" title="Heading 1">
+          <span class="toolbar-text">H1</span>
+        </button>
+        <button class="toolbar-btn" title="Heading 2">
+          <span class="toolbar-text">H2</span>
+        </button>
+        <button class="toolbar-btn" title="Heading 3">
+          <span class="toolbar-text">H3</span>
+        </button>
+      </div>
+
+      <div class="toolbar-divider"></div>
+
+      <div class="toolbar-group">
+        <button class="toolbar-btn" title="Bulleted list">
+          <span class="material-icons-outlined">format_list_bulleted</span>
+        </button>
+        <button class="toolbar-btn" title="Numbered list">
+          <span class="material-icons-outlined">format_list_numbered</span>
+        </button>
+        <button class="toolbar-btn" title="Checklist">
+          <span class="material-icons-outlined">checklist</span>
+        </button>
+      </div>
+
+      <div class="toolbar-divider"></div>
+
+      <div class="toolbar-group">
+        <button class="toolbar-btn" title="Insert link">
+          <span class="material-icons-outlined">link</span>
+        </button>
+        <button class="toolbar-btn" title="Insert image">
+          <span class="material-icons-outlined">image</span>
+        </button>
+        <button class="toolbar-btn" title="Code block">
+          <span class="material-icons-outlined">code</span>
+        </button>
+        <button class="toolbar-btn" title="Insert table">
+          <span class="material-icons-outlined">table_chart</span>
+        </button>
+      </div>
+
+      <div class="toolbar-spacer"></div>
+
+      <div class="toolbar-group">
+        <button class="toolbar-btn" title="Undo">
+          <span class="material-icons-outlined">undo</span>
+        </button>
+        <button class="toolbar-btn" title="Redo">
+          <span class="material-icons-outlined">redo</span>
+        </button>
+      </div>
+    </div>
+
+    <!-- Editor Body -->
+    <div class="editor-body">
+      <div class="editor-page">
+        <textarea
+          class="editor-textarea"
+          [value]="editableContent()"
+          (input)="onContentInput($event)"
+          placeholder="Start writing..."
+          spellcheck="true"
+        ></textarea>
+      </div>
+    </div>
+
+    <!-- Status Bar -->
+    <div class="status-bar">
+      <div class="status-left">
+        <span class="status-item">Markdown</span>
+        <span class="status-separator">|</span>
+        <span class="status-item">{{ wordCount() }} words</span>
+        <span class="status-separator">|</span>
+        <span class="status-item">{{ charCount() }} characters</span>
+      </div>
+      <div class="status-right">
+        <span class="status-item saved">
+          <span class="material-icons-outlined">cloud_done</span>
+          Saved
+        </span>
+      </div>
+    </div>
+  </div>
+} @else {
+  <!-- Empty State -->
+  <div class="empty-state">
+    <div class="empty-icon">
+      <span class="material-icons-outlined">edit_document</span>
+    </div>
+    <h2 class="empty-title">Select a document to start editing</h2>
+    <p class="empty-description">
+      Choose a file from the sidebar or create a new document to get started.
+    </p>
+    <div class="empty-shortcuts">
+      <div class="shortcut-item">
+        <span class="material-icons-outlined">note_add</span>
+        <span>New Document</span>
+      </div>
+      <div class="shortcut-item">
+        <span class="material-icons-outlined">create_new_folder</span>
+        <span>New Folder</span>
+      </div>
+      <div class="shortcut-item">
+        <span class="material-icons-outlined">upload_file</span>
+        <span>Import File</span>
+      </div>
+    </div>
+  </div>
+}

@@ -1,0 +1,195 @@
+import { Component, signal } from '@angular/core';
+import { SideBar } from './side-bar/side-bar';
+import { SreachBar } from './sreach-bar/sreach-bar';
+import { Editor } from './editor/editor';
+import { AddFolder } from './add-folder/add-folder';
+import { DeletedItems } from './deleted-items/deleted-items';
+import { SettingsPanel } from './settings-panel/settings-panel';
+import { Account } from './account/account';
+import { LogIn } from './log-in/log-in';
+
+export interface DocFile {
+  id: string;
+  name: string;
+  type: 'file' | 'folder';
+  parent: string | null;
+  children?: DocFile[];
+  updatedAt: Date;
+  createdAt: Date;
+  content?: string;
+  isDeleted?: boolean;
+}
+
+@Component({
+  selector: 'app-root',
+  imports: [SideBar, SreachBar, Editor, AddFolder, DeletedItems, SettingsPanel, Account, LogIn],
+  templateUrl: './app.html',
+  styleUrl: './app.css'
+})
+export class App {
+  protected readonly title = signal('DocGit');
+  protected isAuthenticated = signal(false);
+  protected userName = signal('');
+  protected userEmail = signal('');
+  protected sidebarCollapsed = signal(false);
+  protected showAddFolder = signal(false);
+  protected showDeletedItems = signal(false);
+  protected showSettings = signal(false);
+  protected showAccount = signal(false);
+  protected searchQuery = signal('');
+  protected activeFile = signal<DocFile | null>(null);
+
+  protected files = signal<DocFile[]>([
+    {
+      id: '1',
+      name: 'My Documents',
+      type: 'folder',
+      parent: null,
+      updatedAt: new Date('2026-03-20'),
+      createdAt: new Date('2026-01-15'),
+      children: [
+        {
+          id: '2',
+          name: 'Project Proposal.md',
+          type: 'file',
+          parent: '1',
+          updatedAt: new Date('2026-03-24'),
+          createdAt: new Date('2026-02-10'),
+          content: '# Project Proposal\n\nThis is a sample document to demonstrate the DocGit editor.\n\n## Overview\n\nDocGit combines the collaborative editing power of Google Docs with the version control capabilities of GitHub.\n\n## Features\n\n- Real-time collaborative editing\n- Git-based version history\n- Markdown support\n- File and folder organization\n\n## Timeline\n\n| Phase | Duration | Status |\n|-------|----------|--------|\n| Design | 2 weeks | Complete |\n| Frontend | 3 weeks | In Progress |\n| Backend | 4 weeks | Planned |\n| Testing | 2 weeks | Planned |'
+        },
+        {
+          id: '3',
+          name: 'Meeting Notes.md',
+          type: 'file',
+          parent: '1',
+          updatedAt: new Date('2026-03-22'),
+          createdAt: new Date('2026-03-01'),
+          content: '# Meeting Notes - March 22\n\n## Attendees\n- Alice\n- Bob\n- Charlie\n\n## Agenda\n1. Sprint review\n2. Architecture decisions\n3. Next steps\n\n## Action Items\n- [ ] Set up CI/CD pipeline\n- [ ] Review pull requests\n- [x] Update documentation'
+        }
+      ]
+    },
+    {
+      id: '4',
+      name: 'Research',
+      type: 'folder',
+      parent: null,
+      updatedAt: new Date('2026-03-18'),
+      createdAt: new Date('2026-02-01'),
+      children: [
+        {
+          id: '5',
+          name: 'Literature Review.md',
+          type: 'file',
+          parent: '4',
+          updatedAt: new Date('2026-03-18'),
+          createdAt: new Date('2026-02-15'),
+          content: '# Literature Review\n\nA comprehensive review of related work in collaborative document editing and version control systems.'
+        }
+      ]
+    },
+    {
+      id: '6',
+      name: 'README.md',
+      type: 'file',
+      parent: null,
+      updatedAt: new Date('2026-03-25'),
+      createdAt: new Date('2026-01-10'),
+      content: '# DocGit\n\nA modern document editor with Git-powered version control.\n\n## Getting Started\n\nClone the repository and run `npm start` to launch the development server.'
+    }
+  ]);
+
+  toggleSidebar(): void {
+    this.sidebarCollapsed.update(v => !v);
+  }
+
+  toggleAccount(): void {
+    this.showAccount.update(v => !v);
+  }
+
+  onLoginSuccess(user: { name: string; email: string }): void {
+    this.userName.set(user.name);
+    this.userEmail.set(user.email);
+    this.isAuthenticated.set(true);
+  }
+
+  onLogOut(): void {
+    this.showAccount.set(false);
+    this.isAuthenticated.set(false);
+    this.userName.set('');
+    this.userEmail.set('');
+    this.activeFile.set(null);
+  }
+
+  onFileSelect(file: DocFile): void {
+    if (file.type === 'file') {
+      this.activeFile.set(file);
+    }
+  }
+
+  onSearch(query: string): void {
+    this.searchQuery.set(query);
+  }
+
+  onAddFolder(name: string): void {
+    const newFolder: DocFile = {
+      id: Date.now().toString(),
+      name,
+      type: 'folder',
+      parent: null,
+      updatedAt: new Date(),
+      createdAt: new Date(),
+      children: []
+    };
+    this.files.update(f => [...f, newFolder]);
+    this.showAddFolder.set(false);
+  }
+
+  onAddFile(parentId: string | null): void {
+    const newFile: DocFile = {
+      id: Date.now().toString(),
+      name: 'Untitled Document.md',
+      type: 'file',
+      parent: parentId,
+      updatedAt: new Date(),
+      createdAt: new Date(),
+      content: ''
+    };
+    if (parentId) {
+      this.files.update(files => this.addFileToFolder(files, parentId, newFile));
+    } else {
+      this.files.update(f => [...f, newFile]);
+    }
+    this.activeFile.set(newFile);
+  }
+
+  onContentChange(content: string): void {
+    const file = this.activeFile();
+    if (file) {
+      const updated = { ...file, content, updatedAt: new Date() };
+      this.activeFile.set(updated);
+      this.files.update(files => this.updateFileInTree(files, updated));
+    }
+  }
+
+  private addFileToFolder(files: DocFile[], folderId: string, newFile: DocFile): DocFile[] {
+    return files.map(f => {
+      if (f.id === folderId && f.type === 'folder') {
+        return { ...f, children: [...(f.children || []), newFile] };
+      }
+      if (f.children) {
+        return { ...f, children: this.addFileToFolder(f.children, folderId, newFile) };
+      }
+      return f;
+    });
+  }
+
+  private updateFileInTree(files: DocFile[], updated: DocFile): DocFile[] {
+    return files.map(f => {
+      if (f.id === updated.id) return updated;
+      if (f.children) {
+        return { ...f, children: this.updateFileInTree(f.children, updated) };
+      }
+      return f;
+    });
+  }
+}

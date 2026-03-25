@@ -1,0 +1,78 @@
+<div class="sidebar-content">
+  <!-- Header -->
+  <div class="sidebar-header">
+    <span class="sidebar-title">Explorer</span>
+    <div class="sidebar-actions">
+      <button class="sidebar-action-btn" (click)="createFile(null)" title="New document">
+        <span class="material-icons-outlined">note_add</span>
+      </button>
+      <button class="sidebar-action-btn" (click)="addFolderClick.emit()" title="New folder">
+        <span class="material-icons-outlined">create_new_folder</span>
+      </button>
+    </div>
+  </div>
+
+  <!-- File Tree -->
+  <div class="file-tree">
+    @for (item of filteredFiles(); track item.id) {
+      <!-- Folder -->
+      @if (item.type === 'folder') {
+        <div class="tree-item folder-item">
+          <button
+            class="tree-row"
+            [class.active]="isActive(item)"
+            (click)="toggleFolder(item.id)"
+          >
+            <span class="material-icons-outlined chevron" [class.expanded]="isFolderExpanded(item.id)">
+              chevron_right
+            </span>
+            <span class="material-icons-outlined file-icon folder-icon">
+              {{ getFileIcon(item) }}
+            </span>
+            <span class="file-name">{{ item.name }}</span>
+            <button class="tree-add-btn" (click)="createFile(item.id); $event.stopPropagation()" title="Add file">
+              <span class="material-icons-outlined">add</span>
+            </button>
+          </button>
+
+          @if (isFolderExpanded(item.id) && item.children) {
+            <div class="tree-children">
+              @for (child of item.children; track child.id) {
+                <button
+                  class="tree-row child-row"
+                  [class.active]="isActive(child)"
+                  (click)="selectFile(child)"
+                >
+                  <span class="material-icons-outlined file-icon doc-icon">
+                    {{ getFileIcon(child) }}
+                  </span>
+                  <span class="file-name">{{ child.name }}</span>
+                </button>
+              }
+            </div>
+          }
+        </div>
+      } @else {
+        <!-- Root-level File -->
+        <button
+          class="tree-row"
+          [class.active]="isActive(item)"
+          (click)="selectFile(item)"
+        >
+          <span class="material-icons-outlined file-icon doc-icon">
+            {{ getFileIcon(item) }}
+          </span>
+          <span class="file-name">{{ item.name }}</span>
+        </button>
+      }
+    }
+  </div>
+
+  <!-- Sidebar Footer -->
+  <div class="sidebar-footer">
+    <div class="storage-info">
+      <span class="material-icons-outlined">cloud_done</span>
+      <span>All changes saved</span>
+    </div>
+  </div>
+</div>
