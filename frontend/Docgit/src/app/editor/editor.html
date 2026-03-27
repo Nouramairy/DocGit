@@ -200,15 +200,15 @@
       Choose a file from the sidebar or create a new document to get started.
     </p>
     <div class="empty-shortcuts">
-      <div class="shortcut-item">
+      <div class="shortcut-item" (click)="newDocumentClick.emit()">
         <span class="material-icons-outlined">note_add</span>
         <span>New Document</span>
       </div>
-      <div class="shortcut-item">
+      <div class="shortcut-item" (click)="newFolderClick.emit()">
         <span class="material-icons-outlined">create_new_folder</span>
         <span>New Folder</span>
       </div>
-      <div class="shortcut-item">
+      <div class="shortcut-item" (click)="triggerImport()">
         <span class="material-icons-outlined">upload_file</span>
         <span>Import File</span>
       </div>

@@ -60,6 +60,9 @@
           [file]="activeFile()"
           (contentChange)="onContentChange($event)"
           (shareClick)="showCollaborators.set(true)"
+          (newDocumentClick)="onAddFile(null)"
+          (newFolderClick)="showAddFolder.set(true)"
+          (importFile)="onImportFile($event)"
         />
       </main>
     </div>
