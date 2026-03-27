@@ -75,6 +75,17 @@
   color: var(--color-text-primary);
 }
 
+.trash-btn .material-icons-outlined {
+  font-size: 22px;
+  color: #5b9bd5;
+  filter: drop-shadow(0 1px 2px rgba(43, 125, 233, 0.3));
+}
+
+.trash-btn:hover .material-icons-outlined {
+  color: #2b7de9;
+  filter: drop-shadow(0 2px 4px rgba(43, 125, 233, 0.4));
+}
+
 .avatar-wrapper {
   position: relative;
   margin-left: 8px;
