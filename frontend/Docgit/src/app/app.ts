@@ -237,6 +237,20 @@ export class App {
     this.addFileParentId.set(null);
   }
 
+  onImportFile(event: { name: string; content: string }): void {
+    const newFile: DocFile = {
+      id: Date.now().toString(),
+      name: event.name,
+      type: 'file',
+      parent: null,
+      updatedAt: new Date(),
+      createdAt: new Date(),
+      content: event.content
+    };
+    this.files.update(f => [...f, newFile]);
+    this.activeFile.set(newFile);
+  }
+
   onRenameItem(event: { id: string; newName: string }): void {
     this.files.update(files => this.renameInTree(files, event.id, event.newName));
     const active = this.activeFile();

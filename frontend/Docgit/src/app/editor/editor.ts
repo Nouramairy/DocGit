@@ -22,6 +22,9 @@ export class Editor {
   file = input<DocFile | null>(null);
   contentChange = output<string>();
   shareClick = output<void>();
+  newDocumentClick = output<void>();
+  newFolderClick = output<void>();
+  importFile = output<{ name: string; content: string }>();
 
   editableContent = signal('');
   wordCount = computed(() => {
@@ -102,5 +105,21 @@ export class Editor {
 
   getPresenceTooltip(user: PresenceUser): string {
     return user.name + (user.isTyping ? ' (typing...)' : ' (viewing)');
+  }
+
+  triggerImport(): void {
+    const input = document.createElement('input');
+    input.type = 'file';
+    input.accept = '.md,.txt,.html,.css,.js,.ts,.json,.xml,.csv,.yaml,.yml';
+    input.onchange = () => {
+      const file = input.files?.[0];
+      if (!file) return;
+      const reader = new FileReader();
+      reader.onload = () => {
+        this.importFile.emit({ name: file.name, content: reader.result as string });
+      };
+      reader.readAsText(file);
+    };
+    input.click();
   }
 }
