@@ -23,6 +23,7 @@ export class SideBar {
   addSubFolderClick = output<DocFile>();
   deleteItem = output<DocFile>();
   renameItem = output<{ id: string; newName: string }>();
+  uploadFile = output<{ name: string; content: string }>();
 
   expandedFolders = signal<Set<string>>(new Set(['1', '4', '7']));
   renamingId = signal<string | null>(null);
@@ -108,6 +109,22 @@ export class SideBar {
 
   onRenameInput(event: Event): void {
     this.renameValue.set((event.target as HTMLInputElement).value);
+  }
+
+  triggerUpload(): void {
+    const input = document.createElement('input');
+    input.type = 'file';
+    input.accept = '.md,.txt,.html,.css,.js,.ts,.json,.xml,.csv,.yaml,.yml';
+    input.onchange = () => {
+      const file = input.files?.[0];
+      if (!file) return;
+      const reader = new FileReader();
+      reader.onload = () => {
+        this.uploadFile.emit({ name: file.name, content: reader.result as string });
+      };
+      reader.readAsText(file);
+    };
+    input.click();
   }
 
   getFileIcon(file: DocFile): string {
