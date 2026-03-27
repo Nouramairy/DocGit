@@ -27,26 +27,8 @@
       <span class="stat-value">3</span>
       <span class="stat-label">Shared</span>
     </div>
-    <div class="stat-divider"></div>
-    <div class="stat-item">
-      <span class="stat-value">47</span>
-      <span class="stat-label">Commits</span>
-    </div>
   </div>
 
-  <div class="dropdown-divider"></div>
-
-  <!-- Storage -->
-  <div class="storage-section">
-    <div class="storage-header">
-      <span class="material-icons-outlined storage-icon">cloud</span>
-      <span class="storage-label">Storage</span>
-      <span class="storage-value">{{ user().storageUsed }} / {{ user().storageTotal }}</span>
-    </div>
-    <div class="storage-bar">
-      <div class="storage-fill" [style.width.%]="user().storagePercent"></div>
-    </div>
-  </div>
 
   <div class="dropdown-divider"></div>
 
@@ -63,11 +45,6 @@
     <button class="menu-item">
       <span class="material-icons-outlined">history</span>
       <span class="menu-text">Activity Log</span>
-    </button>
-    <button class="menu-item">
-      <span class="material-icons-outlined">keyboard</span>
-      <span class="menu-text">Keyboard Shortcuts</span>
-      <span class="menu-shortcut">?</span>
     </button>
   </div>
 
