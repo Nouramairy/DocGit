@@ -55,38 +55,18 @@
     </div>
 
     <!-- Formatting Toolbar -->
-    <div class="toolbar">
+    <div class="toolbar" (mousedown)="$event.preventDefault()">
       <div class="toolbar-group">
-        <button
-          class="toolbar-btn"
-          [class.active]="isFormatActive('bold')"
-          (click)="formatAction('bold')"
-          title="Bold"
-        >
+        <button class="toolbar-btn" (click)="wrapSelection('**', '**')" title="Bold (Ctrl+B)">
           <span class="material-icons-outlined">format_bold</span>
         </button>
-        <button
-          class="toolbar-btn"
-          [class.active]="isFormatActive('italic')"
-          (click)="formatAction('italic')"
-          title="Italic"
-        >
+        <button class="toolbar-btn" (click)="wrapSelection('*', '*')" title="Italic (Ctrl+I)">
           <span class="material-icons-outlined">format_italic</span>
         </button>
-        <button
-          class="toolbar-btn"
-          [class.active]="isFormatActive('underline')"
-          (click)="formatAction('underline')"
-          title="Underline"
-        >
+        <button class="toolbar-btn" (click)="wrapSelection('<u>', '</u>')" title="Underline">
           <span class="material-icons-outlined">format_underlined</span>
         </button>
-        <button
-          class="toolbar-btn"
-          [class.active]="isFormatActive('strikethrough')"
-          (click)="formatAction('strikethrough')"
-          title="Strikethrough"
-        >
+        <button class="toolbar-btn" (click)="wrapSelection('~~', '~~')" title="Strikethrough">
           <span class="material-icons-outlined">strikethrough_s</span>
         </button>
       </div>
@@ -94,13 +74,13 @@
       <div class="toolbar-divider"></div>
 
       <div class="toolbar-group">
-        <button class="toolbar-btn" title="Heading 1">
+        <button class="toolbar-btn" (click)="heading(1)" title="Heading 1">
           <span class="toolbar-text">H1</span>
         </button>
-        <button class="toolbar-btn" title="Heading 2">
+        <button class="toolbar-btn" (click)="heading(2)" title="Heading 2">
           <span class="toolbar-text">H2</span>
         </button>
-        <button class="toolbar-btn" title="Heading 3">
+        <button class="toolbar-btn" (click)="heading(3)" title="Heading 3">
           <span class="toolbar-text">H3</span>
         </button>
       </div>
@@ -108,13 +88,13 @@
       <div class="toolbar-divider"></div>
 
       <div class="toolbar-group">
-        <button class="toolbar-btn" title="Bulleted list">
+        <button class="toolbar-btn" (click)="prefixLines('- ')" title="Bulleted list">
           <span class="material-icons-outlined">format_list_bulleted</span>
         </button>
-        <button class="toolbar-btn" title="Numbered list">
+        <button class="toolbar-btn" (click)="numberedList()" title="Numbered list">
           <span class="material-icons-outlined">format_list_numbered</span>
         </button>
-        <button class="toolbar-btn" title="Checklist">
+        <button class="toolbar-btn" (click)="prefixLines('- [ ] ')" title="Checklist">
           <span class="material-icons-outlined">checklist</span>
         </button>
       </div>
@@ -122,10 +102,10 @@
       <div class="toolbar-spacer"></div>
 
       <div class="toolbar-group">
-        <button class="toolbar-btn" title="Undo">
+        <button class="toolbar-btn" (click)="undo()" title="Undo (Ctrl+Z)">
           <span class="material-icons-outlined">undo</span>
         </button>
-        <button class="toolbar-btn" title="Redo">
+        <button class="toolbar-btn" (click)="redo()" title="Redo (Ctrl+Y)">
           <span class="material-icons-outlined">redo</span>
         </button>
       </div>
@@ -144,29 +124,6 @@
       </div>
     </div>
 
-    <!-- Status Bar -->
-    <div class="status-bar">
-      <div class="status-left">
-        <span class="status-item">Markdown</span>
-        <span class="status-separator">|</span>
-        <span class="status-item">{{ wordCount() }} words</span>
-        <span class="status-separator">|</span>
-        <span class="status-item">{{ charCount() }} characters</span>
-      </div>
-      <div class="status-right">
-        @if (activeUsers().length > 0) {
-          <span class="status-item collab-status">
-            <span class="material-icons-outlined">people</span>
-            {{ activeUsers().length + 1 }} collaborators
-          </span>
-          <span class="status-separator">|</span>
-        }
-        <span class="status-item saved">
-          <span class="material-icons-outlined">cloud_done</span>
-          Saved
-        </span>
-      </div>
-    </div>
   </div>
 } @else {
   <!-- Empty State -->
