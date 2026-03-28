@@ -8,9 +8,9 @@ namespace Docgit.Domain
 {
     public class User
     {
-        public string Name { get; set; } = string.Empty; //PK
-        public string UserName { get; set; } = string.Empty;
-        public int Id { get; set; }
+        public string Name { get; set; } = string.Empty; 
+        public string UserName { get; set; } = string.Empty; // unique key
+        public int Id { get; set; }//PK
 
         public string Email { get; set; } = string.Empty;
 

@@ -9,7 +9,7 @@ namespace Docgit.Domain
     public class FileSystemEntity
     {
         public string Name { get; set; } = string.Empty;
-        public int DocumentId { get; set; } // PK
+        public int Id { get; set; } // PK
         public int ParentId { get; set; } //  FK
         public int UserID { get; set; } //FK 
         public User? User { get; set; } = null;
@@ -17,6 +17,7 @@ namespace Docgit.Domain
         public bool IsFile { get; set; }
         public byte[]? Content { get; set; } 
         public string Extintion { get; set; } = string.Empty;
+        public FileSystemEntity? Parent { get; set; }
 
         public long Bytes { get; set; }
 
@@ -25,7 +26,8 @@ namespace Docgit.Domain
         public DateTime? DeletedAt { get; set; }
         public bool IsDeleted { get; set; }
 
-        
+        public ICollection<FileSystemEntity> Children { get; set; } = new List<FileSystemEntity>();
+        public ICollection<FileHistory> FileHistories { get; set; } = new List<FileHistory>();
 
         public string Directory { get; set; } = string.Empty;
 
