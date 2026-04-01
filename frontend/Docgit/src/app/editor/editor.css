@@ -187,6 +187,17 @@
   background: var(--color-accent-hover);
 }
 
+.action-btn.preview-btn {
+  color: #2563eb;
+  border-color: #bfdbfe;
+  background: #eff6ff;
+}
+
+.action-btn.preview-btn:hover {
+  background: #dbeafe;
+  border-color: #93c5fd;
+}
+
 /* ── Toolbar ── */
 .toolbar {
   display: flex;

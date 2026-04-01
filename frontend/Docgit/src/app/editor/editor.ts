@@ -1,5 +1,6 @@
 import { Component, input, output, signal, computed, effect, ElementRef, inject } from '@angular/core';
 import { DocFile } from '../app';
+import { PreviewMd } from '../../preview-md/preview-md';
 
 export interface PresenceUser {
   id: string;
@@ -17,6 +18,7 @@ export interface PresenceUser {
 })
 export class Editor {
   private hostEl = inject(ElementRef);
+  private previewMd = inject(PreviewMd);
   private resizeTimer: any;
 
   file = input<DocFile | null>(null);
@@ -28,6 +30,7 @@ export class Editor {
 
   editableContent = signal('');
   activeFormats = signal<Set<string>>(new Set());
+  isMarkdown = computed(() => this.file()?.name.endsWith('.md') ?? false);
 
   private undoStack: { text: string; cursor: number }[] = [];
   private redoStack: { text: string; cursor: number }[] = [];
@@ -260,5 +263,12 @@ export class Editor {
       reader.readAsText(file);
     };
     input.click();
+  }
+
+  openPreview(): void {
+    const f = this.file();
+    if (f) {
+      this.previewMd.openPreview(f.name, this.editableContent());
+    }
   }
 }
