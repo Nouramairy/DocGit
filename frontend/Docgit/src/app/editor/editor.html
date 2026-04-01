@@ -47,6 +47,12 @@
 
         <div class="header-divider"></div>
 
+        @if (isMarkdown()) {
+          <button class="action-btn preview-btn" (click)="openPreview()">
+            <span class="material-icons-outlined">visibility</span>
+            Preview
+          </button>
+        }
         <button class="action-btn" (click)="shareClick.emit()">
           <span class="material-icons-outlined">group_add</span>
           Share
