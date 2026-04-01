@@ -1,4 +1,4 @@
-import { Component, signal } from '@angular/core';
+import { Component, signal, computed } from '@angular/core';
 import { SideBar } from './side-bar/side-bar';
 import { SreachBar } from './sreach-bar/sreach-bar';
 import { Editor } from './editor/editor';
@@ -143,6 +143,17 @@ export class App {
       content: '# DocGit\n\nA modern document editor with Git-powered version control.\n\n## Getting Started\n\nClone the repository and run `npm start` to launch the development server.'
     }
   ]);
+
+  protected documentCount = computed(() => this.countFiles(this.files()));
+
+  private countFiles(files: DocFile[]): number {
+    let count = 0;
+    for (const f of files) {
+      if (f.type === 'file') count++;
+      if (f.children) count += this.countFiles(f.children);
+    }
+    return count;
+  }
 
   toggleSidebar(): void {
     this.sidebarCollapsed.update(v => !v);

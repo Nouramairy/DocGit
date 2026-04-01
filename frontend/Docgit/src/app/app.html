@@ -29,6 +29,7 @@
           </button>
           @if (showAccount()) {
             <app-account
+              [documentCount]="documentCount()"
               (logOut)="onLogOut()"
               (close)="showAccount.set(false)"
             />
