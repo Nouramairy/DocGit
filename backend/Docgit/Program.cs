@@ -1,5 +1,8 @@
 using Docgit.Data;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Docgit.Service;
+
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -9,6 +12,8 @@ builder.Services.AddControllers();
 builder.Services.AddSwaggerGen();
 builder.Services.AddDbContext<ApplicationDbContext>(options => options.UseSqlServer(connectionString));
 
+builder.Services.AddScoped<JwtService>(); // register the JwtService as a scoped service in the dependency injection container.
+                                          // This allows it to be injected into controllers or other services that require it.
 var app = builder.Build();
 
 // Configure the HTTP request pipeline.
