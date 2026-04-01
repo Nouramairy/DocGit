@@ -20,7 +20,6 @@ export class SettingsPanel {
   activeTab = signal<'general' | 'editor' | 'git'>('general');
 
   generalSettings = signal<SettingToggle[]>([
-    { id: 'autosave', label: 'Auto-save', description: 'Automatically save documents while editing', enabled: true, icon: 'save' },
     { id: 'darkmode', label: 'Dark Mode', description: 'Use dark theme for the interface', enabled: false, icon: 'dark_mode' },
   ]);
 
