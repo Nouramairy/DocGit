@@ -1,4 +1,4 @@
-import { Component, output, signal, ElementRef, inject, HostListener } from '@angular/core';
+import { Component, output, input, signal, ElementRef, inject, HostListener } from '@angular/core';
 
 @Component({
   selector: 'app-account',
@@ -9,6 +9,7 @@ import { Component, output, signal, ElementRef, inject, HostListener } from '@an
 export class Account {
   logOut = output<void>();
   close = output<void>();
+  documentCount = input(0);
 
   private elRef = inject(ElementRef);
 
