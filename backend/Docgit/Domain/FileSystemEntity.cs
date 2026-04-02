@@ -22,7 +22,7 @@ namespace Docgit.Domain
         public long Bytes { get; set; }
 
         public DateTime CreatedAt { get; set; }
-        public DateTime ChangedAt { get; set; }
+        public DateTime UpdatedAt { get; set; }
         public DateTime? DeletedAt { get; set; }
         public bool IsDeleted { get; set; }
 
