@@ -23,13 +23,13 @@ namespace Docgit.Controllers
             _db = db;
             _jwtService = jwtService;
         }
-        [HttpPost("register")] // Route/api/register 
-        public async Task<IActionResult> Register([FromBody] LogInReqDTO request)
+      [HttpPost("register")] // Route/api/register 
+        public async Task<IActionResult> Register([FromBody] RegisterDto request)
         {
             try
             {
-                if (request == null)
-                    return BadRequest(new { step = "request", message = "Request is null" });
+                //if (request == null)
+                    //return BadRequest(new { step = "request", message = "Request is null" });
 
                 if (string.IsNullOrWhiteSpace(request.UserName))
                     return BadRequest(new { step = "username", message = "Username is required" });
@@ -37,19 +37,24 @@ namespace Docgit.Controllers
                 if (string.IsNullOrWhiteSpace(request.Password))
                     return BadRequest(new { step = "password", message = "Password is required" });
 
-                bool exists = await _db.Users.AnyAsync(u => u.UserName == request.UserName);
+                bool Userexists = await _db.Users.AnyAsync(u => u.UserName == request.UserName);
 
-                if (exists)
+                if (Userexists)
                     return BadRequest(new { step = "exists", message = "Username already exists" });
 
                 string hash = BCrypt.Net.BCrypt.HashPassword(request.Password);
+
+                bool Emailexists = await _db.Users.AnyAsync(u => u.Email == request.Email);
+
+                if (Emailexists)
+                    return BadRequest(new { step = "emailexists", message = "Email already exists" });
 
                 var newUser = new User
                 {
                     UserName = request.UserName,
                     PasswordHash = hash,
-                    Name = request.UserName,
-                    Email = "",
+                    Name = request.Name,
+                    Email = request.Email,
                     CreatedAt = DateTime.UtcNow,
                     UpdatedAt = DateTime.UtcNow,
                     IsDeleted = false
@@ -70,10 +75,10 @@ namespace Docgit.Controllers
                     stackTrace = ex.StackTrace
                 });
             }
-        }
+        }  
 
         [HttpPost("login")] //  Route/api/login
-        public async Task<IActionResult> Login([FromBody] LogInReqDTO request)
+        public async Task<IActionResult> Login([FromBody] LogInReqDto request)
         {
             var user = await _jwtService.AuthenticateAsync(request.UserName, request.Password);
             if (user == null)
