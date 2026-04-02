@@ -8,7 +8,7 @@ using Microsoft.EntityFrameworkCore;
 
 namespace Docgit.Controllers
 {
-    //[Route("api/[controller]")]
+    [Route("api/[controller]")]
     [ApiController]
     public class AuthController : ControllerBase
     {
@@ -23,29 +23,56 @@ namespace Docgit.Controllers
             _db = db;
             _jwtService = jwtService;
         }
-        [HttpPost("/api/register")] //Rout/api/register
-        public async Task<IActionResult> Register([FromBody]LogInReqDTO request)
+        [HttpPost("register")] // Route/api/register 
+        public async Task<IActionResult> Register([FromBody] LogInReqDTO request)
         {
-            if (await _db.Users.AnyAsync(user => user.UserName == request.UserName)) // to avoid duplicate username
-                return BadRequest(new { message = "Username already exists" });
-
-           // if (request.Password.Length < 8) // has to be at least 8 characters long
-               // return BadRequest(new { message = "password must be longer than 8" });
-           // if (!request.Password.Any(char.IsUpper)) // has to contain at least one uppercase letter
-               // return BadRequest(new { message = "password must contain at least one uppercase letter" });
-            var user = new User     // create a new user object and hash the password using BCrypt
+            try
             {
-                UserName = request.UserName,
-                PasswordHash = BCrypt.Net.BCrypt.HashPassword(request.Password) 
-            };
+                if (request == null)
+                    return BadRequest(new { step = "request", message = "Request is null" });
 
-            _db.Users.Add(user);
-            await _db.SaveChangesAsync();// save the new user to the database
+                if (string.IsNullOrWhiteSpace(request.UserName))
+                    return BadRequest(new { step = "username", message = "Username is required" });
 
-            return Ok(new { message = "User registered successfully" });
+                if (string.IsNullOrWhiteSpace(request.Password))
+                    return BadRequest(new { step = "password", message = "Password is required" });
+
+                bool exists = await _db.Users.AnyAsync(u => u.UserName == request.UserName);
+
+                if (exists)
+                    return BadRequest(new { step = "exists", message = "Username already exists" });
+
+                string hash = BCrypt.Net.BCrypt.HashPassword(request.Password);
+
+                var newUser = new User
+                {
+                    UserName = request.UserName,
+                    PasswordHash = hash,
+                    Name = request.UserName,
+                    Email = "",
+                    CreatedAt = DateTime.UtcNow,
+                    UpdatedAt = DateTime.UtcNow,
+                    IsDeleted = false
+                };
+
+                _db.Users.Add(newUser);
+                await _db.SaveChangesAsync();
+
+                return Ok(new { step = "done", message = "User registered successfully" });
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new
+                {
+                    type = ex.GetType().FullName,
+                    message = ex.Message,
+                    inner = ex.InnerException?.Message,
+                    stackTrace = ex.StackTrace
+                });
+            }
         }
 
-        [HttpPost("/api/login")] //  Route/api/login
+        [HttpPost("login")] //  Route/api/login
         public async Task<IActionResult> Login([FromBody] LogInReqDTO request)
         {
             var user = await _jwtService.AuthenticateAsync(request.UserName, request.Password);
