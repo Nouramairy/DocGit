@@ -16,7 +16,7 @@ namespace Docgit.Domain
         public string Path { get; set; } = string.Empty;
         public bool IsFile { get; set; }
         public byte[]? Content { get; set; } 
-        public string Extintion { get; set; } = string.Empty;
+        public string Extention { get; set; } = string.Empty;
         public FileSystemEntity? Parent { get; set; }
 
         public long Bytes { get; set; }
