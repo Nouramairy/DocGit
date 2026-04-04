@@ -1,7 +1,8 @@
 using Docgit.Data;
+using Docgit.Hubs;
+using Docgit.Service;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
-using Docgit.Service;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -36,5 +37,9 @@ app.UseStaticFiles();
 app.UseAuthorization();
 
 app.MapControllers();
+app.MapHub<EventHub>("/api/events/signalr");
+
+// SPA fallback — serve index.html for all non-API routes
+app.MapFallbackToFile("index.html");
 
 app.Run();
