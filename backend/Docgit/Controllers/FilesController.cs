@@ -8,9 +8,10 @@ using Microsoft.AspNetCore.SignalR;
 using System.Security.Claims;
 using System.Threading.Tasks;
 
+
 namespace Docgit.Controllers
 {
-    [Route("api/[controller]")]
+    [Route("api/files")]
     [ApiController]
     public class FilesController : ControllerBase
     {
@@ -20,6 +21,8 @@ namespace Docgit.Controllers
         private readonly IHubContext<EventHub> _hub;
 
 
+
+
         public FilesController(ApplicationDbContext db, Fileservice fileService, IHubContext<EventHub> hub, FileHistoryService fileHistoryService)
         {
             _db = db;
@@ -27,6 +30,7 @@ namespace Docgit.Controllers
             _hub = hub;
             _fileHistoryService = fileHistoryService;
         }
+
 
         private void AddFileHeaders(FileSystemEntity entity)
         {
@@ -41,8 +45,10 @@ namespace Docgit.Controllers
                 Response.Headers["X-Extension"] = entity.Extintion;
         }
 
+
         private int UserId => int.Parse(User.FindFirst(ClaimTypes.NameIdentifier)!.Value);
         // when user sends the request with token , the token will be decrypted and user id will be extracted and assigned here.
+
 
         private static string GetMimeType(string? extension)
         {
@@ -62,8 +68,10 @@ namespace Docgit.Controllers
         }
 
 
+
+
         // GET /api/files
-        [HttpGet("files")]
+        [HttpGet]
         public async Task<IActionResult> GetAll() // This route will be called right after the Auth,
                                                   // returns files that the user with specific user id has accsess to!
         {
@@ -71,13 +79,16 @@ namespace Docgit.Controllers
             return Ok(tree);
         }
 
+
         // GET /api/files/trash  (must be defined before catch-all)
-        [HttpGet("files/trash")]
+        [HttpGet("trash")]
         public async Task<IActionResult> GetTrash()
         {
             var items = await _fileService.GetTrashAsync(UserId);
             return Ok(items);
         }
+
+
 
 
         [HttpGet("{**path}")]
@@ -86,13 +97,16 @@ namespace Docgit.Controllers
             // notebook/notes.md -> file
             // notebook/math -> folder
 
+
             var fileOrFolder = await _fileService.GetByPathAsync(UserId, path);
             if (fileOrFolder == null)
             {
                 return NotFound();
             }
 
+
             AddFileHeaders(fileOrFolder);
+
 
             //fileOrFolder.Content == null -> the file is ok but it doesnt have any content or empty file
             //!fileOrFolder.IsFile is false , it means its a folder
@@ -101,18 +115,23 @@ namespace Docgit.Controllers
                 return Ok();
             }
 
+
             return File(fileOrFolder.Content, GetMimeType(fileOrFolder.Extintion), fileOrFolder.Name);
         }
+
 
         [HttpHead("{**path}")]
         public async Task<IActionResult> HeadFileOrFolder(string path)
         {
 
+
             // A search operation -> user seearch like "test"
             // test.md -> small : 200kB -> use get method -> we get the info + file -> file is small -> not a big deal
-            //mytest.md -> large : 50Mb -> use get method -> we get the info + file -> file is big -> it will load in the browser ram -> it will slowdown the browser. 
+            //mytest.md -> large : 50Mb -> use get method -> we get the info + file -> file is big -> it will load in the browser ram -> it will slowdown the browser.
+
 
             // using get method for large files is not efficient , so we use this method.
+
 
             var fileOrFolder = await _fileService.GetByPathAsync(UserId, path);
             if (fileOrFolder == null)
@@ -120,18 +139,22 @@ namespace Docgit.Controllers
                 return NotFound();
             }
 
+
             AddFileHeaders(fileOrFolder);
             return Ok();
 
+
         }
+
+
 
 
         [HttpPost("{**path}")]
         public async Task<IActionResult> CreateFile(string path)
         {
             using var ms = new MemoryStream(); // create a new memory stream to hold the file content.
-            await Request.Body.CopyToAsync(ms); // copy the content of the request body into the memory stream asynchronously. 
-            // new thread is created to perform the copy operation without blocking the main thread. 
+            await Request.Body.CopyToAsync(ms); // copy the content of the request body into the memory stream asynchronously.
+            // new thread is created to perform the copy operation without blocking the main thread.
             var content = ms.ToArray(); // convert the memory stream to a byte array, which represents the file content.
             var file = await _fileService.CreateFileAsync(UserId, path, content); // 1 needs to be replaced with the actual user ID of the authenticated user.
             if (file == null)
@@ -140,9 +163,11 @@ namespace Docgit.Controllers
             }
             // create a new instance of the Fileservice class and call the CreateFileAsync method to create a new file in the database.
 
+
             await _hub.Clients.All.SendAsync("Event", 0, path);
             return Ok(new { message = "File created successfully" });
         }
+
 
         [HttpPost("folders/{**path}")]
         public async Task<IActionResult> CreateFolder(string path)
@@ -153,9 +178,12 @@ namespace Docgit.Controllers
                 return Conflict(new { message = "Already exists" });
             }
 
+
             await _hub.Clients.All.SendAsync("Event", 5, path);
             return StatusCode(201);
         }
+
+
 
 
         // PUT /api/files/{**path}
@@ -166,11 +194,13 @@ namespace Docgit.Controllers
             await Request.Body.CopyToAsync(ms);
             var content = ms.ToArray();
 
+
             var (entity, existed) = await _fileService.UpsertFileAsync(UserId, path, content);
             var eventType = existed ? 1 : 0;
             await _hub.Clients.All.SendAsync("Event", eventType, path);
             return Ok();
         }
+
 
         // DELETE /api/files/{**path}  — soft-delete or permanent-delete from trash
         [HttpDelete("{**path}")]
@@ -179,10 +209,12 @@ namespace Docgit.Controllers
             var entity = await _fileService.GetByPathAsync(UserId, path);
             var isFolder = entity != null && !entity.IsFile;
 
+
             await _fileService.SoftDeleteAsync(UserId, path);
             await _hub.Clients.All.SendAsync("Event", isFolder ? 7 : 2, path);
             return Ok();
         }
+
 
         [HttpDelete("trash/{**path}")]
         public async Task<IActionResult> PermanentDeleteFromTrash(string path)
@@ -190,7 +222,8 @@ namespace Docgit.Controllers
             await _fileService.PermanentDeleteAsync(UserId, path);
             return Ok();
         }
-        [HttpGet("{**path}/history")]
+        [HttpGet("history/{**path}")]
+
 
         public async Task<IActionResult> GetFileHistory(string path)
         {
@@ -201,11 +234,15 @@ namespace Docgit.Controllers
             }
 
 
+
+
             var history = await _fileHistoryService.GetHistoryAsync(file.Id);
             return Ok(history);
 
+
         }
-        [HttpGet("{**path}/history/{version:int}")]
+        [HttpGet("history/{version:int}/{**path}")]
+
 
         public async Task<IActionResult> GetFileHistoryVersion(string path, int version)
         {
@@ -215,17 +252,20 @@ namespace Docgit.Controllers
                 return NotFound();
             }
 
+
             var content = await _fileHistoryService.GetVersionContentAsync(file.Id, version);
             if (content == null)
             {
                 return NotFound();
             }
 
+
             AddFileHeaders(file);
             return File(content, "text/plain; charset=UTF-8");
         }
 
-        [HttpHead("{**path}/history/{version:int}")]
+
+        [HttpHead("history/{version:int}/{**path}")]
         public async Task<IActionResult> HeadFileHistoryVersion(string path, int version)
         {
             var file = await _fileService.GetByPathAsync(UserId, path);
@@ -234,17 +274,20 @@ namespace Docgit.Controllers
                 return NotFound();
             }
 
+
             var content = await _fileHistoryService.GetVersionContentAsync(file.Id, version);
             if (content == null)
             {
                 return NotFound();
             }
 
+
             AddFileHeaders(file);
             return Ok();
         }
 
-        [HttpPost("{**path}/history/{version:int}/restore")]
+
+        [HttpPost("history/restore/{version:int}/{**path}")]
         public async Task<IActionResult> RestoreFromHistory(string path, int version)
         {
             var file = await _fileService.GetByPathAsync(UserId, path);
@@ -253,19 +296,22 @@ namespace Docgit.Controllers
                 return NotFound();
             }
 
+
             var historicalContent = await _fileHistoryService.GetVersionContentAsync(file.Id, version);
             if (historicalContent == null)
             {
                 return NotFound();
             }
 
+
             await _fileService.UpsertFileAsync(UserId, path, historicalContent);
             await _hub.Clients.All.SendAsync("Event", 1, path);
             return Ok();
         }
-        [HttpPost("trash/{**path}/restore")]
+        [HttpPost("trash/restore/{**path}")]
         public async Task<IActionResult> RestoreFromTrash(string path)
         {
+
 
             var success = await _fileService.RestoreFromTrashAsync(UserId, path);
             if (!success)
@@ -274,12 +320,21 @@ namespace Docgit.Controllers
             }
 
 
+
+
             await _hub.Clients.All.SendAsync("Event", 0, path);
             return Ok();
+
 
         }
 
 
 
+
+
+
     }
 }
+
+
+
