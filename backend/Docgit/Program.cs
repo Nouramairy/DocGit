@@ -1,10 +1,14 @@
 using Docgit.Data;
-using Microsoft.EntityFrameworkCore;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.EntityFrameworkCore;
 using Docgit.Service;
 
-
 var builder = WebApplication.CreateBuilder(args);
+
+builder.WebHost.ConfigureKestrel(options =>
+{
+    options.Limits.MaxRequestBodySize = 100_000_000; // ~100 MB (Vecka 1: 64 MB fil-upload)
+});
 
 // Add services to the container.
 var connectionString = builder.Configuration.GetConnectionString("DefaultConnection");
@@ -23,7 +27,9 @@ if (app.Environment.IsDevelopment())
     app.UseSwaggerUI();
 }
 
-app.UseHttpsRedirection();
+// Statiska filer: GET / och GET /index.html (Vecka 1-tester). Ingen HTTPS-redirect — testerna anropar http://
+app.UseDefaultFiles();
+app.UseStaticFiles();
 
 app.UseAuthorization();
 
