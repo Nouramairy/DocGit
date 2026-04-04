@@ -126,7 +126,7 @@ namespace Docgit.Controllers
         }
 
 
-        [HttpPost("files/files/{**path}")]
+        [HttpPost("{**path}")]
         public async Task<IActionResult> CreateFile(string path)
         {
             using var ms = new MemoryStream(); // create a new memory stream to hold the file content.
@@ -144,7 +144,7 @@ namespace Docgit.Controllers
             return Ok(new { message = "File created successfully" });
         }
 
-        [HttpPost("files/folders/{**path}")]
+        [HttpPost("folders/{**path}")]
         public async Task<IActionResult> CreateFolder(string path)
         {
             var folder = await _fileService.CreateFolderAsync(UserId, path);
@@ -159,7 +159,7 @@ namespace Docgit.Controllers
 
 
         // PUT /api/files/{**path}
-        [HttpPut("files/{**path}")]
+        [HttpPut("{**path}")]
         public async Task<IActionResult> UpdateFile(string path)
         {
             using var ms = new MemoryStream();
@@ -173,7 +173,7 @@ namespace Docgit.Controllers
         }
 
         // DELETE /api/files/{**path}  — soft-delete or permanent-delete from trash
-        [HttpDelete("files/{**path}")]
+        [HttpDelete("{**path}")]
         public async Task<IActionResult> SoftDelete(string path)
         {
             var entity = await _fileService.GetByPathAsync(UserId, path);
@@ -184,13 +184,13 @@ namespace Docgit.Controllers
             return Ok();
         }
 
-        [HttpDelete("files/trash/{**path}")]
+        [HttpDelete("trash/{**path}")]
         public async Task<IActionResult> PermanentDeleteFromTrash(string path)
         {
             await _fileService.PermanentDeleteAsync(UserId, path);
             return Ok();
         }
-        [HttpGet("files/{**path}/history")]
+        [HttpGet("{**path}/history")]
 
         public async Task<IActionResult> GetFileHistory(string path)
         {
@@ -205,7 +205,7 @@ namespace Docgit.Controllers
             return Ok(history);
 
         }
-        [HttpGet("files/{**path}/history/{version:int}")]
+        [HttpGet("{**path}/history/{version:int}")]
 
         public async Task<IActionResult> GetFileHistoryVersion(string path, int version)
         {
@@ -225,7 +225,7 @@ namespace Docgit.Controllers
             return File(content, "text/plain; charset=UTF-8");
         }
 
-        [HttpHead("files/{**path}/history/{version:int}")]
+        [HttpHead("{**path}/history/{version:int}")]
         public async Task<IActionResult> HeadFileHistoryVersion(string path, int version)
         {
             var file = await _fileService.GetByPathAsync(UserId, path);
@@ -244,7 +244,7 @@ namespace Docgit.Controllers
             return Ok();
         }
 
-        [HttpPost("files/{**path}/history/{version:int}/restore")]
+        [HttpPost("{**path}/history/{version:int}/restore")]
         public async Task<IActionResult> RestoreFromHistory(string path, int version)
         {
             var file = await _fileService.GetByPathAsync(UserId, path);
@@ -263,7 +263,7 @@ namespace Docgit.Controllers
             await _hub.Clients.All.SendAsync("Event", 1, path);
             return Ok();
         }
-        [HttpPost("files/trash/{**path}/restore")]
+        [HttpPost("trash/{**path}/restore")]
         public async Task<IActionResult> RestoreFromTrash(string path)
         {
 
