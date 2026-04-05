@@ -1,5 +1,4 @@
 <div class="sidebar-content">
-  <!-- Header -->
   <div class="sidebar-header">
     <span class="sidebar-title">Explorer</span>
     <div class="sidebar-actions">
@@ -9,10 +8,12 @@
       <button class="sidebar-action-btn" (click)="addFolderClick.emit()" title="New folder">
         <span class="material-icons-outlined">create_new_folder</span>
       </button>
+      <button class="sidebar-action-btn" (click)="triggerUpload()" title="Upload file">
+        <span class="material-icons-outlined">upload_file</span>
+      </button>
     </div>
   </div>
 
-  <!-- File Tree (flat rendering of recursive structure) -->
   <div class="file-tree">
     @for (node of flatTree(); track node.file.id) {
       @if (node.file.type === 'folder') {
@@ -32,27 +33,13 @@
           <span class="material-icons-outlined file-icon folder-icon">
             {{ getFileIcon(node.file) }}
           </span>
-          @if (renamingId() === node.file.id) {
-            <input
-              class="rename-input"
-              [value]="renameValue()"
-              (input)="onRenameInput($event)"
-              (keydown)="onRenameKeydown($event)"
-              (blur)="confirmRename()"
-              (click)="$event.stopPropagation()"
-            />
-          } @else {
-            <span class="file-name" (dblclick)="startRename(node.file, $event)">{{ node.file.name }}</span>
-          }
+          <span class="file-name">{{ node.file.name }}</span>
           <div class="tree-actions" (click)="$event.stopPropagation()">
             <button class="tree-action-btn" (click)="createFile(node.file.id)" title="New file">
               <span class="material-icons-outlined">note_add</span>
             </button>
             <button class="tree-action-btn" (click)="requestSubFolder(node.file)" title="New sub-folder">
               <span class="material-icons-outlined">create_new_folder</span>
-            </button>
-            <button class="tree-action-btn" (click)="startRename(node.file, $event)" title="Rename">
-              <span class="material-icons-outlined">edit</span>
             </button>
             <button class="tree-action-btn delete-btn" (click)="deleteItem.emit(node.file)" title="Delete folder">
               <span class="material-icons-outlined">delete_outline</span>
@@ -72,22 +59,8 @@
           <span class="material-icons-outlined file-icon doc-icon">
             {{ getFileIcon(node.file) }}
           </span>
-          @if (renamingId() === node.file.id) {
-            <input
-              class="rename-input"
-              [value]="renameValue()"
-              (input)="onRenameInput($event)"
-              (keydown)="onRenameKeydown($event)"
-              (blur)="confirmRename()"
-              (click)="$event.stopPropagation()"
-            />
-          } @else {
-            <span class="file-name" (dblclick)="startRename(node.file, $event)">{{ node.file.name }}</span>
-          }
+          <span class="file-name">{{ node.file.name }}</span>
           <div class="tree-actions" (click)="$event.stopPropagation()">
-            <button class="tree-action-btn" (click)="startRename(node.file, $event)" title="Rename">
-              <span class="material-icons-outlined">edit</span>
-            </button>
             <button class="tree-action-btn delete-btn" (click)="deleteItem.emit(node.file)" title="Delete file">
               <span class="material-icons-outlined">delete_outline</span>
             </button>
@@ -97,11 +70,10 @@
     }
   </div>
 
-  <!-- Sidebar Footer -->
   <div class="sidebar-footer">
     <div class="storage-info">
       <span class="material-icons-outlined">cloud_done</span>
-      <span>All changes saved</span>
+      <span>Changes save to server</span>
     </div>
   </div>
 </div>

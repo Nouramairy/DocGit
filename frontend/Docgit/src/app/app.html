@@ -1,6 +1,5 @@
 @if (isAuthenticated()) {
   <div class="app-shell">
-    <!-- Top Bar -->
     <header class="topbar">
       <div class="topbar-left">
         <button class="icon-btn" (click)="toggleSidebar()" title="Toggle sidebar">
@@ -17,18 +16,22 @@
       </div>
 
       <div class="topbar-right">
-        <button class="icon-btn" (click)="showDeletedItems.set(true)" title="Deleted items">
-          <span class="material-icons-outlined">delete_outline</span>
+        <button class="icon-btn trash-btn" (click)="openDeletedItems()" title="Deleted items">
+          <span class="material-icons-outlined">delete</span>
         </button>
         <button class="icon-btn" (click)="showSettings.set(true)" title="Settings">
           <span class="material-icons-outlined">settings</span>
         </button>
         <div class="avatar-wrapper">
           <button class="avatar" (click)="toggleAccount(); $event.stopPropagation()">
-            <span class="avatar-initials">JD</span>
+            <span class="avatar-initials">{{ avatarInitials() }}</span>
           </button>
           @if (showAccount()) {
             <app-account
+              [documentCount]="documentCount()"
+              [displayName]="userName()"
+              [email]="userEmail()"
+              [initials]="avatarInitials()"
               (logOut)="onLogOut()"
               (close)="showAccount.set(false)"
             />
@@ -37,29 +40,29 @@
       </div>
     </header>
 
-    <!-- Main Content -->
     <div class="main-content">
-      <!-- Sidebar -->
       <aside class="sidebar" [class.collapsed]="sidebarCollapsed()">
-      <app-side-bar
-        [files]="files()"
-        [activeFile]="activeFile()"
-        [searchQuery]="searchQuery()"
-        (fileSelect)="onFileSelect($event)"
-        (addFolderClick)="showAddFolder.set(true)"
-        (addFileClick)="onAddFile($event)"
-        (addSubFolderClick)="onRequestSubFolder($event)"
-        (deleteItem)="onDeleteItem($event)"
-        (renameItem)="onRenameItem($any($event))"
-      />
+        <app-side-bar
+          [files]="files()"
+          [activeFile]="activeFile()"
+          [searchQuery]="searchQuery()"
+          (fileSelect)="onFileSelect($event)"
+          (addFolderClick)="showAddFolder.set(true)"
+          (addFileClick)="onAddFile($event)"
+          (addSubFolderClick)="onRequestSubFolder($event)"
+          (deleteItem)="onDeleteItem($event)"
+          (uploadFile)="onImportFile($event)"
+        />
       </aside>
 
-      <!-- Editor Area -->
       <main class="editor-area">
+        @if (isTreeLoading()) {
+          <div class="tree-loading-banner">Loading your files…</div>
+        }
         <app-editor
           [file]="activeFile()"
+          [versionCount]="editorVersionCount()"
           (contentChange)="onContentChange($event)"
-          (shareClick)="showCollaborators.set(true)"
           (newDocumentClick)="onAddFile(null)"
           (newFolderClick)="showAddFolder.set(true)"
           (importFile)="onImportFile($event)"
@@ -68,7 +71,6 @@
     </div>
   </div>
 
-  <!-- Modals / Overlays -->
   @if (showAddFolder()) {
     <app-add-folder
       (create)="onAddFolder($event)"
@@ -103,16 +105,8 @@
     />
   }
 
-  @if (showCollaborators()) {
-    <app-collaborator-panel
-      (close)="showCollaborators.set(false)"
-    />
-  }
-
   @if (showSettings()) {
-    <app-settings-panel
-      (close)="showSettings.set(false)"
-    />
+    <app-settings-panel (close)="showSettings.set(false)" />
   }
 } @else {
   <app-log-in (loginSuccess)="onLoginSuccess($event)" />

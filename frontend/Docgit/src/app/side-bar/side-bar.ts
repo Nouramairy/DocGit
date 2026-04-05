@@ -1,4 +1,4 @@
-import { Component, input, output, signal, computed, ElementRef, viewChild } from '@angular/core';
+import { Component, input, output, signal, computed } from '@angular/core';
 import { DocFile } from '../app';
 
 export interface FlatTreeItem {
@@ -19,14 +19,13 @@ export class SideBar {
 
   fileSelect = output<DocFile>();
   addFolderClick = output<void>();
+  /** Parent folder API path, or null for root */
   addFileClick = output<string | null>();
   addSubFolderClick = output<DocFile>();
   deleteItem = output<DocFile>();
-  renameItem = output<{ id: string; newName: string }>();
+  uploadFile = output<{ name: string; content: string }>();
 
-  expandedFolders = signal<Set<string>>(new Set(['1', '4', '7']));
-  renamingId = signal<string | null>(null);
-  renameValue = signal('');
+  expandedFolders = signal<Set<string>>(new Set());
 
   flatTree = computed<FlatTreeItem[]>(() => {
     const query = this.searchQuery().toLowerCase();
@@ -34,20 +33,20 @@ export class SideBar {
     return this.flattenTree(source, 0);
   });
 
-  toggleFolder(folderId: string): void {
-    this.expandedFolders.update(set => {
+  toggleFolder(folderPath: string): void {
+    this.expandedFolders.update((set) => {
       const next = new Set(set);
-      if (next.has(folderId)) {
-        next.delete(folderId);
+      if (next.has(folderPath)) {
+        next.delete(folderPath);
       } else {
-        next.add(folderId);
+        next.add(folderPath);
       }
       return next;
     });
   }
 
-  isFolderExpanded(folderId: string): boolean {
-    return this.expandedFolders().has(folderId);
+  isFolderExpanded(folderPath: string): boolean {
+    return this.expandedFolders().has(folderPath);
   }
 
   isActive(file: DocFile): boolean {
@@ -58,12 +57,12 @@ export class SideBar {
     this.fileSelect.emit(file);
   }
 
-  createFile(parentId: string | null): void {
-    this.addFileClick.emit(parentId);
+  createFile(parentPath: string | null): void {
+    this.addFileClick.emit(parentPath);
   }
 
   requestSubFolder(folder: DocFile): void {
-    this.expandedFolders.update(set => {
+    this.expandedFolders.update((set) => {
       const next = new Set(set);
       next.add(folder.id);
       return next;
@@ -71,43 +70,20 @@ export class SideBar {
     this.addSubFolderClick.emit(folder);
   }
 
-  startRename(file: DocFile, event: MouseEvent): void {
-    event.stopPropagation();
-    this.renamingId.set(file.id);
-    this.renameValue.set(file.name);
-    setTimeout(() => {
-      const input = document.querySelector('.rename-input') as HTMLInputElement;
-      if (input) {
-        input.focus();
-        const dotIndex = file.name.lastIndexOf('.');
-        input.setSelectionRange(0, dotIndex > 0 ? dotIndex : file.name.length);
-      }
-    });
-  }
-
-  confirmRename(): void {
-    const id = this.renamingId();
-    const name = this.renameValue().trim();
-    if (id && name) {
-      this.renameItem.emit({ id, newName: name });
-    }
-    this.renamingId.set(null);
-  }
-
-  cancelRename(): void {
-    this.renamingId.set(null);
-  }
-
-  onRenameKeydown(event: KeyboardEvent): void {
-    if (event.key === 'Enter') {
-      this.confirmRename();
-    } else if (event.key === 'Escape') {
-      this.cancelRename();
-    }
-  }
-
-  onRenameInput(event: Event): void {
-    this.renameValue.set((event.target as HTMLInputElement).value);
+  triggerUpload(): void {
+    const input = document.createElement('input');
+    input.type = 'file';
+    input.accept = '.md,.txt,.html,.css,.js,.ts,.json,.xml,.csv,.yaml,.yml';
+    input.onchange = () => {
+      const file = input.files?.[0];
+      if (!file) return;
+      const reader = new FileReader();
+      reader.onload = () => {
+        this.uploadFile.emit({ name: file.name, content: reader.result as string });
+      };
+      reader.readAsText(file);
+    };
+    input.click();
   }
 
   getFileIcon(file: DocFile): string {
@@ -119,7 +95,7 @@ export class SideBar {
   }
 
   getIndentPx(depth: number, isFile: boolean): string {
-    const base = isFile ? (16 + depth * 20) : (16 + depth * 20);
+    const base = isFile ? 16 + depth * 20 : 16 + depth * 20;
     return base + 'px';
   }
 
