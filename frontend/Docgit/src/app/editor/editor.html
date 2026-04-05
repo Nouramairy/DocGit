@@ -1,6 +1,5 @@
 @if (file()) {
   <div class="editor-container">
-    <!-- Document Header -->
     <div class="editor-header">
       <div class="doc-info">
         <span class="material-icons-outlined doc-type-icon">article</span>
@@ -14,53 +13,22 @@
             <span class="detail-separator">·</span>
             <span class="detail-item">
               <span class="material-icons-outlined">history</span>
-              3 versions
+              {{ versionCount() }} {{ versionCount() === 1 ? 'version' : 'versions' }} saved
             </span>
           </div>
         </div>
       </div>
 
       <div class="doc-actions">
-        <!-- Live Presence Avatars -->
-        @if (activeUsers().length > 0) {
-          <div class="presence-bar">
-            @for (user of activeUsers(); track user.id) {
-              <div
-                class="presence-avatar"
-                [style.background]="user.color"
-                [title]="getPresenceTooltip(user)"
-                [class.typing]="user.isTyping"
-              >
-                <span class="presence-initials">{{ user.initials }}</span>
-                @if (user.isTyping) {
-                  <span class="typing-indicator">
-                    <span class="typing-dot"></span>
-                    <span class="typing-dot"></span>
-                    <span class="typing-dot"></span>
-                  </span>
-                }
-              </div>
-            }
-            <span class="presence-count">{{ activeUsers().length }} active</span>
-          </div>
-        }
-
-        <div class="header-divider"></div>
-
         @if (isMarkdown()) {
           <button class="action-btn preview-btn" (click)="openPreview()">
             <span class="material-icons-outlined">visibility</span>
             Preview
           </button>
         }
-        <button class="action-btn" (click)="shareClick.emit()">
-          <span class="material-icons-outlined">group_add</span>
-          Share
-        </button>
       </div>
     </div>
 
-    <!-- Formatting Toolbar -->
     <div class="toolbar" (mousedown)="$event.preventDefault()">
       <div class="toolbar-group">
         <button class="toolbar-btn" (click)="wrapSelection('**', '**')" title="Bold (Ctrl+B)">
@@ -117,7 +85,6 @@
       </div>
     </div>
 
-    <!-- Editor Body -->
     <div class="editor-body">
       <div class="editor-page">
         <textarea
@@ -129,10 +96,8 @@
         ></textarea>
       </div>
     </div>
-
   </div>
 } @else {
-  <!-- Empty State -->
   <div class="empty-state">
     <div class="empty-icon">
       <span class="material-icons-outlined">edit_document</span>

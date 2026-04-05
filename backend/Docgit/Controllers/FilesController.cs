@@ -2,6 +2,7 @@
 using Docgit.Domain;
 using Docgit.Hubs;
 using Docgit.Service;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.SignalR;
@@ -13,6 +14,7 @@ namespace Docgit.Controllers
 {
     [Route("api/files")]
     [ApiController]
+    [Authorize]
     public class FilesController : ControllerBase
     {
         private readonly ApplicationDbContext _db;
@@ -110,7 +112,13 @@ namespace Docgit.Controllers
 
             //fileOrFolder.Content == null -> the file is ok but it doesnt have any content or empty file
             //!fileOrFolder.IsFile is false , it means its a folder
-            if (!fileOrFolder.IsFile || fileOrFolder.Content == null)
+            if (!fileOrFolder.IsFile)
+            {
+                var folderContent = await _fileService.GetFolderContentAsync(UserId, path);
+                return Ok(folderContent ?? new System.Text.Json.Nodes.JsonObject());
+            }
+
+            if (fileOrFolder.Content == null)
             {
                 return Ok();
             }
@@ -150,12 +158,28 @@ namespace Docgit.Controllers
 
 
         [HttpPost("{**path}")]
+        [HttpPost("files/{**path}")]
         public async Task<IActionResult> CreateFile(string path)
         {
             using var ms = new MemoryStream(); // create a new memory stream to hold the file content.
             await Request.Body.CopyToAsync(ms); // copy the content of the request body into the memory stream asynchronously.
             // new thread is created to perform the copy operation without blocking the main thread.
             var content = ms.ToArray(); // convert the memory stream to a byte array, which represents the file content.
+
+            // if body is empty and extension is missing -> treat as folder creation
+            var extension = global::System.IO.Path.GetExtension(path);
+            if (content.Length == 0 && string.IsNullOrEmpty(extension))
+            {
+                var folder = await _fileService.CreateFolderAsync(UserId, path);
+                if (folder == null)
+                {
+                    return Conflict(new { message = "Already exists" });
+                }
+
+                await _hub.Clients.All.SendAsync("Event", 5, path);
+                return StatusCode(201);
+            }
+
             var file = await _fileService.CreateFileAsync(UserId, path, content); // 1 needs to be replaced with the actual user ID of the authenticated user.
             if (file == null)
             {
@@ -194,6 +218,22 @@ namespace Docgit.Controllers
             await Request.Body.CopyToAsync(ms);
             var content = ms.ToArray();
 
+            var extension = global::System.IO.Path.GetExtension(path);
+            if (content.Length == 0 && string.IsNullOrEmpty(extension))
+            {
+                var (folder, created) = await _fileService.UpsertFolderAsync(UserId, path);
+                if (folder == null)
+                {
+                    return Conflict(new { message = "Path exists as file" });
+                }
+
+                if (created)
+                {
+                    await _hub.Clients.All.SendAsync("Event", 5, path);
+                }
+
+                return Ok();
+            }
 
             var (entity, existed) = await _fileService.UpsertFileAsync(UserId, path, content);
             var eventType = existed ? 1 : 0;
@@ -207,6 +247,11 @@ namespace Docgit.Controllers
         public async Task<IActionResult> SoftDelete(string path)
         {
             var entity = await _fileService.GetByPathAsync(UserId, path);
+            if (entity == null)
+            {
+                return Ok();
+            }
+
             var isFolder = entity != null && !entity.IsFile;
 
 

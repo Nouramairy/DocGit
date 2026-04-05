@@ -1,57 +1,33 @@
 <div class="account-dropdown">
-  <!-- Profile Header -->
   <div class="profile-header">
     <div class="profile-avatar">
-      <span class="avatar-initials">{{ user().initials }}</span>
+      <span class="avatar-initials">{{ initials() }}</span>
     </div>
     <div class="profile-info">
-      <span class="profile-name">{{ user().name }}</span>
-      <span class="profile-email">{{ user().email }}</span>
+      <span class="profile-name">{{ displayName() }}</span>
+      <span class="profile-email">{{ email() }}</span>
       <span class="profile-badge">
         <span class="material-icons-outlined badge-icon">verified</span>
-        {{ user().plan }} Plan
+        Signed in
       </span>
     </div>
   </div>
 
   <div class="dropdown-divider"></div>
 
-  <!-- Stats Row -->
   <div class="stats-row">
     <div class="stat-item">
       <span class="stat-value">{{ documentCount() }}</span>
       <span class="stat-label">Documents</span>
     </div>
-    <div class="stat-divider"></div>
-    <div class="stat-item">
-      <span class="stat-value">3</span>
-      <span class="stat-label">Shared</span>
-    </div>
-  </div>
-
-
-  <div class="dropdown-divider"></div>
-
-  <!-- Menu Items -->
-  <div class="menu-section">
-    <button class="menu-item">
-      <span class="material-icons-outlined">person</span>
-      <span class="menu-text">My Profile</span>
-    </button>
   </div>
 
   <div class="dropdown-divider"></div>
 
-  <!-- Log Out -->
   <div class="menu-section">
     <button class="menu-item logout-item" (click)="onLogOut()">
       <span class="material-icons-outlined">logout</span>
       <span class="menu-text">Log Out</span>
     </button>
-  </div>
-
-  <!-- Footer -->
-  <div class="dropdown-footer">
-    <span>Member since {{ user().memberSince }}</span>
   </div>
 </div>

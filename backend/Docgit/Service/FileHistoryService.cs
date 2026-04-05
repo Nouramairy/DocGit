@@ -50,7 +50,7 @@ namespace Docgit.Service
                 .ToListAsync();
         }
 
-            public async Task<byte[]> GetVersionContentAsync(int fileEntityId, int versionNumber)
+            public async Task<byte[]?> GetVersionContentAsync(int fileEntityId, int versionNumber)
             {
                 var history = await _db.FileHistories
                     .FirstOrDefaultAsync(h => h.FileEntityId == fileEntityId && h.VersionNumber == versionNumber);

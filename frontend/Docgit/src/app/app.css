@@ -144,4 +144,16 @@
   flex: 1;
   overflow: hidden;
   background: var(--color-bg-secondary);
+  position: relative;
+  display: flex;
+  flex-direction: column;
+}
+
+.tree-loading-banner {
+  flex-shrink: 0;
+  padding: 8px 16px;
+  font-size: 13px;
+  color: var(--color-text-secondary);
+  background: var(--color-bg-tertiary);
+  border-bottom: 1px solid var(--color-border-light);
 }

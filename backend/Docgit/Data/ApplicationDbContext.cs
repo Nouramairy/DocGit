@@ -5,7 +5,7 @@ namespace Docgit.Data
 {
     public class ApplicationDbContext : DbContext
     {
-        public ApplicationDbContext(DbContextOptions options) : base(options)
+        public ApplicationDbContext(DbContextOptions<ApplicationDbContext> options) : base(options)
         {
         }
         public DbSet<FileSystemEntity> FileSystemEntities => Set<FileSystemEntity>();
@@ -25,7 +25,7 @@ namespace Docgit.Data
 
             // its a two way relationship
             modelBuilder.Entity<FileHistory>()
-                .HasOne<FileSystemEntity>() // each file history is associated with one file system entity
+                .HasOne(fileHistory => fileHistory.FileEntity) // each file history is associated with one file system entity
                 .WithMany(file=> file.FileHistories) // a file system entity can have many file histories
                 .HasForeignKey(fileHistory => fileHistory.FileEntityId) // foreign Key in file history that references file system entity
                 .OnDelete(DeleteBehavior.Cascade); // if we delete a file system entity, we want to delete all the file histories associated with that file system entity

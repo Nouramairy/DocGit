@@ -17,6 +17,7 @@ export class DeletedItems {
   items = input<DeletedEntry[]>([]);
 
   close = output<void>();
+  /** API path of the trashed item */
   restore = output<string>();
   permanentDelete = output<string>();
   emptyTrash = output<void>();

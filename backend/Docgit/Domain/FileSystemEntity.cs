@@ -10,13 +10,13 @@ namespace Docgit.Domain
     {
         public string Name { get; set; } = string.Empty;
         public int Id { get; set; } // PK
-        public int ParentId { get; set; } //  FK
+        public int? ParentId { get; set; } //  FK
         public int UserID { get; set; } //FK 
         public User? User { get; set; } = null;
         public string Path { get; set; } = string.Empty;
         public bool IsFile { get; set; }
         public byte[]? Content { get; set; } 
-        public string Extintion { get; set; } = string.Empty; // need to fix
+        public string? Extintion { get; set; } = string.Empty; // need to fix
         public FileSystemEntity? Parent { get; set; }
 
         public long Bytes { get; set; }

@@ -2,14 +2,6 @@ import { Component, input, output, signal, computed, effect, ElementRef, inject 
 import { DocFile } from '../app';
 import { PreviewMd } from '../../preview-md/preview-md';
 
-export interface PresenceUser {
-  id: string;
-  name: string;
-  initials: string;
-  color: string;
-  isTyping: boolean;
-}
-
 @Component({
   selector: 'app-editor',
   imports: [],
@@ -19,28 +11,22 @@ export interface PresenceUser {
 export class Editor {
   private hostEl = inject(ElementRef);
   private previewMd = inject(PreviewMd);
-  private resizeTimer: any;
+  private resizeTimer: ReturnType<typeof setTimeout> | undefined;
 
   file = input<DocFile | null>(null);
+  versionCount = input(0);
   contentChange = output<string>();
-  shareClick = output<void>();
   newDocumentClick = output<void>();
   newFolderClick = output<void>();
   importFile = output<{ name: string; content: string }>();
 
   editableContent = signal('');
-  activeFormats = signal<Set<string>>(new Set());
   isMarkdown = computed(() => this.file()?.name.endsWith('.md') ?? false);
 
   private undoStack: { text: string; cursor: number }[] = [];
   private redoStack: { text: string; cursor: number }[] = [];
   private lastContent = '';
   private currentFileId: string | null = null;
-
-  activeUsers = signal<PresenceUser[]>([
-    { id: 'u2', name: 'Alice Chen', initials: 'AC', color: '#34a853', isTyping: true },
-    { id: 'u4', name: 'Carol Zhang', initials: 'CZ', color: '#fbbc05', isTyping: false },
-  ]);
 
   constructor() {
     effect(() => {
@@ -61,7 +47,7 @@ export class Editor {
   }
 
   private scheduleResize(): void {
-    clearTimeout(this.resizeTimer);
+    if (this.resizeTimer !== undefined) clearTimeout(this.resizeTimer);
     this.resizeTimer = setTimeout(() => {
       const ta = this.getTextarea();
       if (ta) {
@@ -162,10 +148,10 @@ export class Editor {
     const block = text.substring(lineStart, blockEnd);
     const lines = block.split('\n');
 
-    const allPrefixed = lines.every(l => l.startsWith(prefix));
+    const allPrefixed = lines.every((l) => l.startsWith(prefix));
     const newLines = allPrefixed
-      ? lines.map(l => l.substring(prefix.length))
-      : lines.map(l => prefix + l);
+      ? lines.map((l) => l.substring(prefix.length))
+      : lines.map((l) => prefix + l);
 
     const newBlock = newLines.join('\n');
     const newText = text.substring(0, lineStart) + newBlock + text.substring(blockEnd);
@@ -190,9 +176,9 @@ export class Editor {
     const block = text.substring(lineStart, blockEnd);
     const lines = block.split('\n');
 
-    const allNumbered = lines.every(l => /^\d+\.\s/.test(l));
+    const allNumbered = lines.every((l) => /^\d+\.\s/.test(l));
     const newLines = allNumbered
-      ? lines.map(l => l.replace(/^\d+\.\s/, ''))
+      ? lines.map((l) => l.replace(/^\d+\.\s/, ''))
       : lines.map((l, i) => `${i + 1}. ${l}`);
 
     const newBlock = newLines.join('\n');
@@ -227,10 +213,6 @@ export class Editor {
     this.applyValue(ta, newText, lineStart + newLine.length);
   }
 
-  isFormatActive(action: string): boolean {
-    return this.activeFormats().has(action);
-  }
-
   getRelativeTime(date: Date): string {
     const now = new Date();
     const diff = now.getTime() - date.getTime();
@@ -243,10 +225,6 @@ export class Editor {
     if (hours < 24) return `${hours}h ago`;
     if (days < 7) return `${days}d ago`;
     return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
-  }
-
-  getPresenceTooltip(user: PresenceUser): string {
-    return user.name + (user.isTyping ? ' (typing...)' : ' (viewing)');
   }
 
   triggerImport(): void {

@@ -1,4 +1,7 @@
-import { Component, output, signal, computed } from '@angular/core';
+import { Component, output, signal, computed, inject } from '@angular/core';
+import { HttpErrorResponse } from '@angular/common/http';
+import { finalize } from 'rxjs';
+import { DocApiService } from '../services/doc-api.service';
 
 @Component({
   selector: 'app-log-in',
@@ -7,15 +10,17 @@ import { Component, output, signal, computed } from '@angular/core';
   styleUrl: './log-in.css',
 })
 export class LogIn {
+  private readonly api = inject(DocApiService);
+
   loginSuccess = output<{ name: string; email: string }>();
 
-  mode = signal<'signin' | 'signup' | 'forgot'>('signin');
+  mode = signal<'signin' | 'signup'>('signin');
 
+  userName = signal('');
   email = signal('');
   password = signal('');
   name = signal('');
   confirmPassword = signal('');
-  rememberMe = signal(false);
   showPassword = signal(false);
   isLoading = signal(false);
   errorMessage = signal('');
@@ -54,20 +59,27 @@ export class LogIn {
     return 'var(--color-success)';
   });
 
-  canSubmitSignIn = computed(() =>
-    this.email().trim() !== '' && this.password().trim() !== '' && this.emailValid()
+  canSubmitSignIn = computed(
+    () => this.userName().trim() !== '' && this.password().trim() !== '',
   );
 
-  canSubmitSignUp = computed(() =>
-    this.name().trim() !== '' &&
-    this.email().trim() !== '' &&
-    this.password().length >= 8 &&
-    this.password() === this.confirmPassword() &&
-    this.emailValid()
+  canSubmitSignUp = computed(
+    () =>
+      this.userName().trim() !== '' &&
+      this.name().trim() !== '' &&
+      this.email().trim() !== '' &&
+      this.password().length >= 8 &&
+      this.password() === this.confirmPassword() &&
+      this.emailValid(),
   );
 
-  switchMode(mode: 'signin' | 'signup' | 'forgot'): void {
+  switchMode(mode: 'signin' | 'signup'): void {
     this.mode.set(mode);
+    this.errorMessage.set('');
+  }
+
+  onUserNameInput(event: Event): void {
+    this.userName.set((event.target as HTMLInputElement).value);
     this.errorMessage.set('');
   }
 
@@ -89,61 +101,61 @@ export class LogIn {
     this.confirmPassword.set((event.target as HTMLInputElement).value);
   }
 
-  toggleRememberMe(): void {
-    this.rememberMe.update(v => !v);
-  }
-
   toggleShowPassword(): void {
-    this.showPassword.update(v => !v);
+    this.showPassword.update((v) => !v);
   }
 
   onSubmit(): void {
-    if (this.mode() === 'forgot') {
-      this.handleForgotPassword();
-      return;
-    }
-
     this.isLoading.set(true);
     this.errorMessage.set('');
 
-    setTimeout(() => {
-      this.isLoading.set(false);
-
-      const displayName = this.mode() === 'signup'
-        ? this.name()
-        : this.email().split('@')[0];
-
-      this.loginSuccess.emit({
-        name: displayName,
-        email: this.email()
-      });
-    }, 800);
-  }
-
-  onSocialLogin(provider: string): void {
-    this.isLoading.set(true);
-    this.errorMessage.set('');
-
-    setTimeout(() => {
-      this.isLoading.set(false);
-      this.loginSuccess.emit({
-        name: provider === 'github' ? 'GitHub User' : 'Google User',
-        email: `user@${provider}.com`
-      });
-    }, 800);
-  }
-
-  private handleForgotPassword(): void {
-    if (!this.email().trim() || !this.emailValid()) {
-      this.errorMessage.set('Please enter a valid email address.');
+    if (this.mode() === 'signup') {
+      this.api
+        .register({
+          userName: this.userName().trim(),
+          password: this.password(),
+          email: this.email().trim(),
+          name: this.name().trim(),
+        })
+        .pipe(finalize(() => this.isLoading.set(false)))
+        .subscribe({
+          next: () => {
+            this.switchMode('signin');
+            this.errorMessage.set('');
+          },
+          error: (err: HttpErrorResponse) => {
+            this.errorMessage.set(this.readApiError(err) ?? 'Registration failed.');
+          },
+        });
       return;
     }
-    this.isLoading.set(true);
-    setTimeout(() => {
-      this.isLoading.set(false);
-      this.errorMessage.set('');
-      this.switchMode('signin');
-    }, 1000);
+
+    this.api
+      .login(this.userName().trim(), this.password())
+      .pipe(finalize(() => this.isLoading.set(false)))
+      .subscribe({
+        next: (token) => {
+          this.api.setAuthToken(token);
+          const u = this.userName().trim();
+          const displayName = u;
+          const mail = this.email().trim() || `${u}@local`;
+          this.api.setStoredProfile(displayName, mail);
+          this.loginSuccess.emit({ name: displayName, email: mail });
+        },
+        error: (err: HttpErrorResponse) => {
+          this.errorMessage.set(this.readApiError(err) ?? 'Invalid username or password.');
+        },
+      });
+  }
+
+  private readApiError(err: HttpErrorResponse): string | null {
+    const body = err.error;
+    if (body && typeof body === 'object') {
+      if ('message' in body && typeof (body as { message: unknown }).message === 'string') {
+        return (body as { message: string }).message;
+      }
+    }
+    return null;
   }
 
   onKeydown(event: KeyboardEvent): void {
@@ -151,8 +163,6 @@ export class LogIn {
       if (this.mode() === 'signin' && this.canSubmitSignIn()) {
         this.onSubmit();
       } else if (this.mode() === 'signup' && this.canSubmitSignUp()) {
-        this.onSubmit();
-      } else if (this.mode() === 'forgot') {
         this.onSubmit();
       }
     }
