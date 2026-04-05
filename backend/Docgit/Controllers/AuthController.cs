@@ -8,7 +8,6 @@ using Microsoft.EntityFrameworkCore;
 
 namespace Docgit.Controllers
 {
-    [Route("api/[controller]")]
     [ApiController]
     public class AuthController : ControllerBase
     {
@@ -23,7 +22,7 @@ namespace Docgit.Controllers
             _db = db;
             _jwtService = jwtService;
         }
-      [HttpPost("register")] // Route/api/register 
+            [HttpPost("/api/register")] // Route/api/register 
         public async Task<IActionResult> Register([FromBody] RegisterDto request)
         {
             try
@@ -77,10 +76,11 @@ namespace Docgit.Controllers
             }
         }  
 
-        [HttpPost("login")] //  Route/api/login
+        [HttpPost("/api/login")] //  Route/api/login
         public async Task<IActionResult> Login([FromBody] LogInReqDto request)
         {
-            var user = await _jwtService.AuthenticateAsync(request.UserName, request.Password);
+            var username = string.IsNullOrWhiteSpace(request.UserName) ? request.User : request.UserName;
+            var user = await _jwtService.AuthenticateAsync(username, request.Password);
             if (user == null)
                 return Unauthorized(new { message = "Invalid username or password" });
 

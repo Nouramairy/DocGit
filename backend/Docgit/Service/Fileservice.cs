@@ -1,9 +1,7 @@
 ﻿using Docgit.Data;
 using Docgit.Domain;
 using Docgit.Dto;
-using Microsoft.AspNetCore.Http.HttpResults;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.EntityFrameworkCore.ChangeTracking;
 using System.Text.Json.Nodes;
 
 namespace Docgit.Service
@@ -24,11 +22,12 @@ namespace Docgit.Service
             var entities = await _db.FileSystemEntities
                 .Where(entity => entity.UserID == userId && !entity.IsDeleted)
                 .ToListAsync();
-            return null;
+
+            return BuildNestTree(entities, null);
         }
 
         // need discussion 
-        private JsonObject BuildNestTree(List<FileSystemEntity> allEntities, int? parentId)
+        private static JsonObject BuildNestTree(List<FileSystemEntity> allEntities, int? parentId)
         {
             var tree = new JsonObject();
             var children = allEntities.Where(e => e.ParentId == parentId).OrderBy(e => e.Name).ToList();
@@ -56,18 +55,83 @@ namespace Docgit.Service
         }
 
 
-        public async Task<FileSystemEntity> CreateFileAsync(int userId, string path, byte[] content)
+        public async Task<FileSystemEntity?> CreateFileAsync(int userId, string path, byte[] content)
         {
+            var existing = await GetByPathAsync(userId, path);
+            if (existing != null) return null;
+
+            var deleted = await _db.FileSystemEntities
+                .FirstOrDefaultAsync(entity => entity.UserID == userId && entity.Path == path && entity.IsDeleted);
+            if (deleted != null)
+            {
+                if (!deleted.IsFile)
+                    return null;
+
+                deleted.Content = content;
+                deleted.Bytes = content.LongLength;
+                deleted.Extintion = string.IsNullOrEmpty(System.IO.Path.GetExtension(deleted.Name))
+                    ? null
+                    : System.IO.Path.GetExtension(deleted.Name);
+                deleted.IsDeleted = false;
+                deleted.DeletedAt = null;
+                deleted.UpdatedAt = DateTime.UtcNow;
+                await _db.SaveChangesAsync();
+                return deleted;
+            }
+
+            return await CreateFileWithParentsAsync(userId, path, content);
+        }
+
+        private async Task<FileSystemEntity> CreateFileWithParentsAsync(int userId, string path, byte[] content)
+        {
+            var segments = path.Split('/');
+            var fileName = segments[^1];
+            var extension = System.IO.Path.GetExtension(fileName);
+
+            int? parentId = null;
+            var currentPath = string.Empty;
+
+            for (int i = 0; i < segments.Length - 1; i++)
+            {
+                currentPath = i == 0 ? segments[i] : $"{currentPath}/{segments[i]}";
+                var folder = await _db.FileSystemEntities
+                    .FirstOrDefaultAsync(f => f.UserID == userId && f.Path == currentPath);
+
+                if (folder == null)
+                {
+                    folder = new FileSystemEntity
+                    {
+                        UserID = userId,
+                        Name = segments[i],
+                        Path = currentPath,
+                        IsFile = false,
+                        ParentId = parentId,
+                        CreatedAt = DateTime.UtcNow,
+                        UpdatedAt = DateTime.UtcNow
+                    };
+                    _db.FileSystemEntities.Add(folder);
+                    await _db.SaveChangesAsync();
+                }
+
+                parentId = folder.Id;
+            }
+
             var fileEntity = new FileSystemEntity
             {
                 UserID = userId,
+                Name = fileName,
                 Path = path,
+                IsFile = true,
                 Content = content,
+                Extintion = string.IsNullOrEmpty(extension) ? null : extension,
+                Bytes = content.LongLength,
+                ParentId = parentId,
                 CreatedAt = DateTime.UtcNow,
                 UpdatedAt = DateTime.UtcNow,
                 IsDeleted = false
             };
-            var entry = await _db.FileSystemEntities.AddAsync(fileEntity);
+
+            await _db.FileSystemEntities.AddAsync(fileEntity);
             await _db.SaveChangesAsync();
             return fileEntity;
         }
@@ -77,6 +141,21 @@ namespace Docgit.Service
            var file = await _db.FileSystemEntities
                 .FirstOrDefaultAsync(entity => entity.UserID == userId && entity.Path == path && !entity.IsDeleted);
             return file;
+        }
+
+        public async Task<JsonObject?> GetFolderContentAsync(int userId, string path)
+        {
+            var folder = await _db.FileSystemEntities
+                .FirstOrDefaultAsync(entity => entity.UserID == userId && entity.Path == path && !entity.IsDeleted);
+
+            if (folder == null || folder.IsFile)
+                return null;
+
+            var entities = await _db.FileSystemEntities
+                .Where(entity => entity.UserID == userId && !entity.IsDeleted)
+                .ToListAsync();
+
+            return BuildNestTree(entities, folder.Id);
         }
 
         public async Task<List<TrashIteamDto>> GetTrashAsync(int userId)
@@ -98,6 +177,20 @@ namespace Docgit.Service
             var existing = await GetByPathAsync(userId, path);
             if (existing != null) return null;
 
+            var deleted = await _db.FileSystemEntities
+                .FirstOrDefaultAsync(entity => entity.UserID == userId && entity.Path == path && entity.IsDeleted);
+            if (deleted != null)
+            {
+                if (deleted.IsFile)
+                    return null;
+
+                deleted.IsDeleted = false;
+                deleted.DeletedAt = null;
+                deleted.UpdatedAt = DateTime.UtcNow;
+                await _db.SaveChangesAsync();
+                return deleted;
+            }
+
             // Notebook / Math / Calculas / sunday -> here sunday folder will be created.
             var segments = path.Split('/');
             //what the size? 
@@ -118,7 +211,7 @@ namespace Docgit.Service
                 Name = folderName,
                 Path = path,
                 IsFile = false,
-                ParentId = (int)parentId,
+                ParentId = parentId,
                 CreatedAt = DateTime.UtcNow,
                 UpdatedAt = DateTime.UtcNow,
                 IsDeleted = false
@@ -129,80 +222,58 @@ namespace Docgit.Service
             return folderEntity;
         }
 
+        public async Task<(FileSystemEntity? entity, bool created)> UpsertFolderAsync(int userId, string path)
+        {
+            var existing = await GetByPathAsync(userId, path);
+            if (existing != null)
+            {
+                if (existing.IsFile)
+                    return (null, false);
+
+                return (existing, false);
+            }
+
+            var created = await CreateFolderAsync(userId, path);
+            return (created, created != null);
+        }
+
         public async Task<(FileSystemEntity entity, bool existed)> UpsertFileAsync(int userId, string path, byte[] content)
         {
+            var existing = await GetByPathAsync(userId, path);
+
+            if (existing != null)
             {
-                var existing = await GetByPathAsync(userId, path);
-
-                if (existing != null)
-                {
-                    await _historyService.SaveVersionAsync(existing);
-                    existing.Content = content;
-                    existing.Bytes = content.LongLength;
-                    existing.UpdatedAt = DateTime.UtcNow;
-                    await _db.SaveChangesAsync();
-                    return (existing, true);
-                }
-
-                var created = await CreateFileWithParentsAsync(userId, path, content);
-                return (created, false);
+                await _historyService.SaveVersionAsync(existing);
+                existing.Content = content;
+                existing.Bytes = content.LongLength;
+                existing.UpdatedAt = DateTime.UtcNow;
+                await _db.SaveChangesAsync();
+                return (existing, true);
             }
 
-        }
-
-        private async Task<FileSystemEntity> CreateFileWithParentsAsync(int userId, string path, byte[] content)
-        {
-            var segments = path.Split('/');
-            var fileName = segments[^1];
-            var extension = System.IO.Path.GetExtension(fileName);
-
-
-            int? parentId = null;
-
-            var currentPath = string.Empty;
-
-            for (int i = 0; i < segments.Length - 1; i++)
+            var deleted = await _db.FileSystemEntities
+                .FirstOrDefaultAsync(entity => entity.UserID == userId && entity.Path == path && entity.IsDeleted);
+            if (deleted != null)
             {
-                currentPath = i == 0 ? segments[i] : $"{currentPath}/{segments[i]}";
-                var folder = await _db.FileSystemEntities
-                    .FirstOrDefaultAsync(f => f.UserID == userId && f.Path == currentPath);
+                if (!deleted.IsFile)
+                    return (deleted, true);
 
-                if (folder == null)
-                {
-                    folder = new FileSystemEntity
-                    {
-                        UserID = userId,
-                        Name = segments[i],
-                        Path = currentPath,
-                        IsFile = false,
-                        ParentId = (int)parentId,
-                        CreatedAt = DateTime.UtcNow,
-                        UpdatedAt = DateTime.UtcNow
-                    };
-                    _db.FileSystemEntities.Add(folder);
-                    await _db.SaveChangesAsync();
-                }
-
-                parentId = folder.Id;
+                deleted.Content = content;
+                deleted.Bytes = content.LongLength;
+                deleted.Extintion = string.IsNullOrEmpty(System.IO.Path.GetExtension(deleted.Name))
+                    ? null
+                    : System.IO.Path.GetExtension(deleted.Name);
+                deleted.IsDeleted = false;
+                deleted.DeletedAt = null;
+                deleted.UpdatedAt = DateTime.UtcNow;
+                await _db.SaveChangesAsync();
+                return (deleted, true);
             }
-            var fileEntity = new FileSystemEntity
-            {
-                UserID = userId,
-                Name = fileName,
-                Path = path,
-                IsFile = true,
-                Content = content,
-                Extintion = string.IsNullOrEmpty(extension) ? null : extension,
-                Bytes = content.LongLength,
-                ParentId = (int)parentId,
-                CreatedAt = DateTime.UtcNow,
-                UpdatedAt = DateTime.UtcNow
-            };
 
-            _db.FileSystemEntities.Add(fileEntity);
-            await _db.SaveChangesAsync();
-            return fileEntity;
+            var created = await CreateFileWithParentsAsync(userId, path, content);
+            return (created, false);
         }
+
         public async Task SoftDeleteAsync(int userId, string path)
         {
             var entity = await _db.FileSystemEntities.FirstOrDefaultAsync(f => f.UserID == userId && f.Path == path && !f.IsDeleted);
@@ -248,6 +319,7 @@ namespace Docgit.Service
         {
             var entity = await _db.FileSystemEntities.FirstOrDefaultAsync(f => f.UserID == userId && f.Path == path && f.IsDeleted);
             if (entity == null)
+                return false;
 
             entity.IsDeleted = false;
             entity.DeletedAt = null;

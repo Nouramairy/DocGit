@@ -20,7 +20,7 @@
       </div>
 
       <div class="panel-body">
-        @for (entry of items(); track entry.file.id) {
+        @for (entry of items(); track entry.path) {
           <div class="deleted-item">
             <div class="deleted-item-info">
               <span class="material-icons-outlined item-icon" [class.folder]="entry.file.type === 'folder'">
@@ -33,10 +33,10 @@
               </div>
             </div>
             <div class="item-actions">
-              <button class="item-action-btn restore" (click)="restore.emit(entry.file.id)" title="Restore">
+              <button class="item-action-btn restore" (click)="restore.emit(entry.path)" title="Restore">
                 <span class="material-icons-outlined">restore</span>
               </button>
-              <button class="item-action-btn delete" (click)="permanentDelete.emit(entry.file.id)" title="Delete permanently">
+              <button class="item-action-btn delete" (click)="permanentDelete.emit(entry.path)" title="Delete permanently">
                 <span class="material-icons-outlined">delete_forever</span>
               </button>
             </div>
