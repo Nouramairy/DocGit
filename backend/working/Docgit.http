@@ -1,0 +1,6 @@
+@Docgit_HostAddress = http://localhost:5063
+
+GET {{Docgit_HostAddress}}/weatherforecast/
+Accept: application/json
+
+###
