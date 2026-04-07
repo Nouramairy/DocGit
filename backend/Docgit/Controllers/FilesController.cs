@@ -51,6 +51,8 @@ namespace Docgit.Controllers
         private int UserId => int.Parse(User.FindFirst(ClaimTypes.NameIdentifier)!.Value);
         // when user sends the request with token , the token will be decrypted and user id will be extracted and assigned here.
 
+        private string UserGroupName => EventHub.UserGroup(UserId);
+
 
         private static string GetMimeType(string? extension)
         {
@@ -176,7 +178,7 @@ namespace Docgit.Controllers
                     return Conflict(new { message = "Already exists" });
                 }
 
-                await _hub.Clients.All.SendAsync("Event", 5, path);
+                await _hub.Clients.Group(UserGroupName).SendAsync("Event", 5, path);
                 return StatusCode(201);
             }
 
@@ -188,7 +190,7 @@ namespace Docgit.Controllers
             // create a new instance of the Fileservice class and call the CreateFileAsync method to create a new file in the database.
 
 
-            await _hub.Clients.All.SendAsync("Event", 0, path);
+            await _hub.Clients.Group(UserGroupName).SendAsync("Event", 0, path);
             return Ok(new { message = "File created successfully" });
         }
 
@@ -203,7 +205,7 @@ namespace Docgit.Controllers
             }
 
 
-            await _hub.Clients.All.SendAsync("Event", 5, path);
+            await _hub.Clients.Group(UserGroupName).SendAsync("Event", 5, path);
             return StatusCode(201);
         }
 
@@ -229,7 +231,7 @@ namespace Docgit.Controllers
 
                 if (created)
                 {
-                    await _hub.Clients.All.SendAsync("Event", 5, path);
+                    await _hub.Clients.Group(UserGroupName).SendAsync("FolderCreationEvent", 5, path);
                 }
 
                 return Ok();
@@ -237,7 +239,7 @@ namespace Docgit.Controllers
 
             var (entity, existed) = await _fileService.UpsertFileAsync(UserId, path, content);
             var eventType = existed ? 1 : 0;
-            await _hub.Clients.All.SendAsync("Event", eventType, path);
+            await _hub.Clients.Group(UserGroupName).SendAsync("FileChangeEvent", eventType, path);
             return Ok();
         }
 
@@ -256,7 +258,7 @@ namespace Docgit.Controllers
 
 
             await _fileService.SoftDeleteAsync(UserId, path);
-            await _hub.Clients.All.SendAsync("Event", isFolder ? 7 : 2, path);
+            await _hub.Clients.Group(UserGroupName).SendAsync("Event", isFolder ? 7 : 2, path);
             return Ok();
         }
 
@@ -350,7 +352,7 @@ namespace Docgit.Controllers
 
 
             await _fileService.UpsertFileAsync(UserId, path, historicalContent);
-            await _hub.Clients.All.SendAsync("Event", 1, path);
+            await _hub.Clients.Group(UserGroupName).SendAsync("Event", 1, path);
             return Ok();
         }
         [HttpPost("trash/restore/{**path}")]
@@ -367,7 +369,7 @@ namespace Docgit.Controllers
 
 
 
-            await _hub.Clients.All.SendAsync("Event", 0, path);
+            await _hub.Clients.Group(UserGroupName).SendAsync("Event", 0, path);
             return Ok();
 
 

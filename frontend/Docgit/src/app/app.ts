@@ -1,5 +1,5 @@
-import { Component, computed, signal, inject, afterNextRender } from '@angular/core';
-import { forkJoin } from 'rxjs';
+import { Component, computed, signal, inject, afterNextRender, OnDestroy } from '@angular/core';
+import { forkJoin, Subscription } from 'rxjs';
 import { SideBar } from './side-bar/side-bar';
 import { SreachBar } from './sreach-bar/sreach-bar';
 import { Editor } from './editor/editor';
@@ -15,6 +15,7 @@ import {
   FileHistoryEntryDto,
   TrashItemDto,
 } from './services/doc-api.service';
+import { RealtimeEventsService } from './services/realtime-events.service';
 
 export type { DocFile };
 
@@ -40,8 +41,10 @@ export interface DeletedEntry {
   templateUrl: './app.html',
   styleUrl: './app.css',
 })
-export class App {
+export class App implements OnDestroy {
   private readonly api = inject(DocApiService);
+  private readonly realtime = inject(RealtimeEventsService);
+  private realtimeSub: Subscription | null = null;
 
   protected readonly title = signal('DocGit');
   protected isAuthenticated = signal(false);
@@ -82,6 +85,12 @@ export class App {
     afterNextRender(() => this.tryRestoreSession());
   }
 
+  ngOnDestroy(): void {
+    this.realtimeSub?.unsubscribe();
+    this.realtimeSub = null;
+    void this.realtime.stop();
+  }
+
   private tryRestoreSession(): void {
     if (!this.api.hasToken()) return;
     const p = this.api.getStoredProfile();
@@ -90,6 +99,27 @@ export class App {
       this.userEmail.set(p.email);
     }
     this.refreshFileTree(true);
+    this.startRealtime();
+  }
+
+  private startRealtime(): void {
+    if (this.realtimeSub) return;
+
+    this.realtimeSub = this.realtime.events$.subscribe((evt) => {
+      console.info('[App] Realtime file event received:', evt);
+      this.refreshFileTree();
+      if (this.showDeletedItems()) {
+        this.refreshTrashList();
+      }
+    });
+
+    void this.realtime.start();
+  }
+
+  private stopRealtime(): void {
+    this.realtimeSub?.unsubscribe();
+    this.realtimeSub = null;
+    void this.realtime.stop();
   }
 
   private countFiles(files: DocFile[]): number {
@@ -114,9 +144,11 @@ export class App {
     this.userEmail.set(user.email);
     this.isAuthenticated.set(true);
     this.refreshFileTree(false);
+    this.startRealtime();
   }
 
   onLogOut(): void {
+    this.stopRealtime();
     this.api.setAuthToken(null);
     this.api.clearStoredProfile();
     this.showAccount.set(false);
