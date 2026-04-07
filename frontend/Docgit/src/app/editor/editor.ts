@@ -1,6 +1,17 @@
-import { Component, input, output, signal, computed, effect, ElementRef, inject } from '@angular/core';
+import {
+  Component,
+  input,
+  output,
+  signal,
+  computed,
+  effect,
+  ElementRef,
+  inject,
+  HostListener,
+} from '@angular/core';
 import { DocFile } from '../app';
 import { PreviewMd } from '../../preview-md/preview-md';
+import { FileHistoryEntryDto } from '../services/doc-api.service';
 
 @Component({
   selector: 'app-editor',
@@ -14,32 +25,58 @@ export class Editor {
   private resizeTimer: ReturnType<typeof setTimeout> | undefined;
 
   file = input<DocFile | null>(null);
+  /** Bumps when parent loads content from server so the textarea syncs for the same file id. */
+  contentSyncRev = input(0);
   versionCount = input(0);
+  fileHistory = input<FileHistoryEntryDto[]>([]);
+  saveInFlight = input(false);
+  restoreInFlight = input(false);
   contentChange = output<string>();
+  saveClick = output<void>();
+  restoreVersion = output<number>();
   newDocumentClick = output<void>();
   newFolderClick = output<void>();
   importFile = output<{ name: string; content: string }>();
 
   editableContent = signal('');
+  versionsOpen = signal(false);
   isMarkdown = computed(() => this.file()?.name.endsWith('.md') ?? false);
 
   private undoStack: { text: string; cursor: number }[] = [];
   private redoStack: { text: string; cursor: number }[] = [];
   private lastContent = '';
   private currentFileId: string | null = null;
+  private lastAppliedSyncRev = -1;
 
   constructor() {
     effect(() => {
       const f = this.file();
-      if (f && f.id !== this.currentFileId) {
-        this.currentFileId = f.id;
-        this.editableContent.set(f.content || '');
-        this.lastContent = f.content || '';
-        this.undoStack = [];
-        this.redoStack = [];
-        this.scheduleResize();
+      const rev = this.contentSyncRev();
+      if (!f) {
+        this.currentFileId = null;
+        return;
       }
+      const fileBecameActive = f.id !== this.currentFileId;
+      const serverPushedContent = rev !== this.lastAppliedSyncRev;
+      if (!fileBecameActive && !serverPushedContent) return;
+
+      this.currentFileId = f.id;
+      this.lastAppliedSyncRev = rev;
+      this.editableContent.set(f.content || '');
+      this.lastContent = f.content || '';
+      this.undoStack = [];
+      this.redoStack = [];
+      this.scheduleResize();
     });
+  }
+
+  @HostListener('document:click', ['$event'])
+  onDocumentClick(ev: MouseEvent): void {
+    if (!this.versionsOpen()) return;
+    const root = this.hostEl.nativeElement as HTMLElement;
+    if (!root.contains(ev.target as Node)) {
+      this.versionsOpen.set(false);
+    }
   }
 
   private getTextarea(): HTMLTextAreaElement | null {
@@ -248,5 +285,20 @@ export class Editor {
     if (f) {
       this.previewMd.openPreview(f.name, this.editableContent());
     }
+  }
+
+  toggleVersions(event: MouseEvent): void {
+    event.stopPropagation();
+    this.versionsOpen.update((v) => !v);
+  }
+
+  onSelectVersion(version: number, event: MouseEvent): void {
+    event.stopPropagation();
+    this.versionsOpen.set(false);
+    this.restoreVersion.emit(version);
+  }
+
+  onSaveClick(): void {
+    this.saveClick.emit();
   }
 }

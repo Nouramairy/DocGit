@@ -61,8 +61,14 @@
         }
         <app-editor
           [file]="activeFile()"
+          [contentSyncRev]="editorContentSyncRev()"
           [versionCount]="editorVersionCount()"
+          [fileHistory]="fileHistory()"
+          [saveInFlight]="saveInFlight()"
+          [restoreInFlight]="restoreInFlight()"
           (contentChange)="onContentChange($event)"
+          (saveClick)="onSaveNow()"
+          (restoreVersion)="onRestoreHistoryVersion($event)"
           (newDocumentClick)="onAddFile(null)"
           (newFolderClick)="showAddFolder.set(true)"
           (importFile)="onImportFile($event)"

@@ -96,8 +96,8 @@ namespace Docgit.Controllers
         [HttpGet("{**path}")]
         public async Task<IActionResult> GetFileOrFolder(string path)
         {
-            // notebook/notes.md -> file
-            // notebook/math -> folder
+            // notebook/notes.md  file
+            // notebook/math  folder
 
 
             var fileOrFolder = await _fileService.GetByPathAsync(UserId, path);

@@ -158,6 +158,24 @@ export class DocApiService {
     });
   }
 
+  getFileHistoryVersionText(path: string, version: number): Observable<string> {
+    return this.http.get(
+      `${this.baseUrl}/api/files/history/${version}/${this.encodePath(path)}`,
+      {
+        headers: this.authHeaders(),
+        responseType: 'text',
+      },
+    );
+  }
+
+  restoreFileFromHistory(path: string, version: number): Observable<void> {
+    return this.http.post<void>(
+      `${this.baseUrl}/api/files/history/restore/${version}/${this.encodePath(path)}`,
+      '',
+      { headers: this.authHeaders() },
+    );
+  }
+
   createFile(path: string, text: string): Observable<void> {
     return this.http.post<void>(`${this.baseUrl}/api/files/${this.encodePath(path)}`, text, {
       headers: this.authHeaders('text/plain; charset=UTF-8'),

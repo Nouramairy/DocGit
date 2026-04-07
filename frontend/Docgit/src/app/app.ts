@@ -12,6 +12,7 @@ import { AddSubFolder } from './add-sub-folder/add-sub-folder';
 import {
   DocApiService,
   DocFile,
+  FileHistoryEntryDto,
   TrashItemDto,
 } from './services/doc-api.service';
 
@@ -61,6 +62,10 @@ export class App {
   protected files = signal<DocFile[]>([]);
   protected isTreeLoading = signal(false);
   protected editorVersionCount = signal(0);
+  protected fileHistory = signal<FileHistoryEntryDto[]>([]);
+  protected editorContentSyncRev = signal(0);
+  protected saveInFlight = signal(false);
+  protected restoreInFlight = signal(false);
   protected avatarInitials = computed(() => {
     const n = this.userName().trim();
     if (!n) return '?';
@@ -72,9 +77,6 @@ export class App {
   });
 
   protected documentCount = computed(() => this.countFiles(this.files()));
-
-  private saveTimer: ReturnType<typeof setTimeout> | null = null;
-  private pendingSavePath: string | null = null;
 
   constructor() {
     afterNextRender(() => this.tryRestoreSession());
@@ -115,7 +117,6 @@ export class App {
   }
 
   onLogOut(): void {
-    this.flushPendingSave();
     this.api.setAuthToken(null);
     this.api.clearStoredProfile();
     this.showAccount.set(false);
@@ -126,6 +127,7 @@ export class App {
     this.files.set([]);
     this.deletedFiles.set([]);
     this.editorVersionCount.set(0);
+    this.fileHistory.set([]);
   }
 
   private refreshFileTree(setAuthOnSuccess = false): void {
@@ -149,20 +151,23 @@ export class App {
 
   onFileSelect(file: DocFile): void {
     if (file.type !== 'file') return;
-    this.flushPendingSave();
+    this.editorContentSyncRev.update((r) => r + 1);
     this.activeFile.set({ ...file, content: '' });
     this.editorVersionCount.set(0);
+    this.fileHistory.set([]);
     this.api.getFileText(file.id).subscribe({
       next: (text) => {
         const current = this.activeFile();
         if (current?.id === file.id) {
           this.activeFile.set({ ...current, content: text });
+          this.editorContentSyncRev.update((r) => r + 1);
         }
       },
       error: () => {
         const current = this.activeFile();
         if (current?.id === file.id) {
           this.activeFile.set({ ...current, content: '' });
+          this.editorContentSyncRev.update((r) => r + 1);
         }
       },
     });
@@ -170,11 +175,13 @@ export class App {
       next: (h) => {
         if (this.activeFile()?.id === file.id) {
           this.editorVersionCount.set(h.length);
+          this.fileHistory.set(h);
         }
       },
       error: () => {
         if (this.activeFile()?.id === file.id) {
           this.editorVersionCount.set(0);
+          this.fileHistory.set([]);
         }
       },
     });
@@ -250,6 +257,8 @@ export class App {
         };
         this.activeFile.set(newFile);
         this.editorVersionCount.set(0);
+        this.fileHistory.set([]);
+        this.editorContentSyncRev.update((r) => r + 1);
       },
       error: () => {
         this.showAddFile.set(false);
@@ -275,6 +284,17 @@ export class App {
         };
         this.activeFile.set(newFile);
         this.editorVersionCount.set(0);
+        this.fileHistory.set([]);
+        this.editorContentSyncRev.update((r) => r + 1);
+        this.api.getFileHistory(path).subscribe({
+          next: (h) => {
+            if (this.activeFile()?.id === path) {
+              this.editorVersionCount.set(h.length);
+              this.fileHistory.set(h);
+            }
+          },
+          error: () => {},
+        });
       },
       error: () => this.refreshFileTree(),
     });
@@ -285,49 +305,70 @@ export class App {
     if (!file) return;
     const updated = { ...file, content, updatedAt: new Date() };
     this.activeFile.set(updated);
-    this.scheduleSave(file.id, content);
   }
 
-  private scheduleSave(path: string, content: string): void {
-    this.pendingSavePath = path;
-    if (this.saveTimer) clearTimeout(this.saveTimer);
-    this.saveTimer = setTimeout(() => {
-      this.saveTimer = null;
-      if (this.pendingSavePath !== path) return;
-      this.api.putFile(path, content).subscribe({
-        next: () => {
-          const active = this.activeFile();
-          if (active?.id === path) {
-            this.api.getFileHistory(path).subscribe({
-              next: (h) => this.editorVersionCount.set(h.length),
-              error: () => {},
-            });
-          }
-        },
-        error: () => {},
-      });
-    }, 700);
-  }
-
-  private flushPendingSave(): void {
-    if (this.saveTimer) {
-      clearTimeout(this.saveTimer);
-      this.saveTimer = null;
-    }
+  onSaveNow(): void {
     const file = this.activeFile();
-    if (file?.type === 'file' && file.content !== undefined) {
-      this.api.putFile(file.id, file.content).subscribe({ error: () => {} });
-    }
-    this.pendingSavePath = null;
+    if (!file || file.type !== 'file') return;
+    this.saveInFlight.set(true);
+    this.api.putFile(file.id, file.content ?? '').subscribe({
+      next: () => {
+        const active = this.activeFile();
+        if (active?.id !== file.id) {
+          this.saveInFlight.set(false);
+          return;
+        }
+        this.api.getFileHistory(file.id).subscribe({
+          next: (h) => {
+            this.editorVersionCount.set(h.length);
+            this.fileHistory.set(h);
+            this.saveInFlight.set(false);
+          },
+          error: () => this.saveInFlight.set(false),
+        });
+      },
+      error: () => this.saveInFlight.set(false),
+    });
+  }
+
+  onRestoreHistoryVersion(version: number): void {
+    const file = this.activeFile();
+    if (!file || file.type !== 'file') return;
+    this.restoreInFlight.set(true);
+    this.api.restoreFileFromHistory(file.id, version).subscribe({
+      next: () => {
+        this.api.getFileText(file.id).subscribe({
+          next: (text) => {
+            const current = this.activeFile();
+            if (current?.id === file.id) {
+              this.activeFile.set({ ...current, content: text, updatedAt: new Date() });
+              this.editorContentSyncRev.update((r) => r + 1);
+            }
+            this.api.getFileHistory(file.id).subscribe({
+              next: (h) => {
+                if (this.activeFile()?.id === file.id) {
+                  this.editorVersionCount.set(h.length);
+                  this.fileHistory.set(h);
+                }
+                this.restoreInFlight.set(false);
+              },
+              error: () => this.restoreInFlight.set(false),
+            });
+          },
+          error: () => this.restoreInFlight.set(false),
+        });
+      },
+      error: () => this.restoreInFlight.set(false),
+    });
   }
 
   onDeleteItem(item: DocFile): void {
-    this.flushPendingSave();
     this.api.softDelete(item.id).subscribe({
       next: () => {
         if (this.activeFile()?.id === item.id) {
           this.activeFile.set(null);
           this.editorVersionCount.set(0);
+          this.fileHistory.set([]);
         }
         this.refreshFileTree();
         if (this.showDeletedItems()) {

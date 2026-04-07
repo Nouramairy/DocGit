@@ -20,8 +20,59 @@
       </div>
 
       <div class="doc-actions">
+        <button
+          type="button"
+          class="action-btn primary"
+          [disabled]="saveInFlight()"
+          (click)="onSaveClick()"
+          title="Save to server (creates a version)"
+        >
+          <span class="material-icons-outlined">save</span>
+          {{ saveInFlight() ? 'Saving…' : 'Save' }}
+        </button>
+
+        <div class="versions-dropdown-wrap">
+          <button
+            type="button"
+            class="action-btn versions-trigger"
+            [class.open]="versionsOpen()"
+            [disabled]="restoreInFlight()"
+            (click)="toggleVersions($event)"
+            title="Saved versions — restore an older snapshot"
+          >
+            <span class="material-icons-outlined">history</span>
+            Versions
+            <span class="material-icons-outlined versions-chevron">expand_more</span>
+          </button>
+          @if (versionsOpen()) {
+            <div class="versions-panel" (click)="$event.stopPropagation()">
+              @if (fileHistory().length === 0) {
+                <div class="versions-empty">No saved versions yet. Save the file to create history.</div>
+              } @else {
+                <div class="versions-hint">Restore replaces the current file on the server.</div>
+                <ul class="versions-list">
+                  @for (h of fileHistory(); track h.version) {
+                    <li>
+                      <button
+                        type="button"
+                        class="versions-item"
+                        [disabled]="restoreInFlight()"
+                        (click)="onSelectVersion(h.version, $event)"
+                      >
+                        <span class="versions-item-ver">v{{ h.version }}</span>
+                        <span class="versions-item-meta">{{ h.savedAt }}</span>
+                        <span class="versions-item-bytes">{{ h.bytes }} B</span>
+                      </button>
+                    </li>
+                  }
+                </ul>
+              }
+            </div>
+          }
+        </div>
+
         @if (isMarkdown()) {
-          <button class="action-btn preview-btn" (click)="openPreview()">
+          <button type="button" class="action-btn preview-btn" (click)="openPreview()">
             <span class="material-icons-outlined">visibility</span>
             Preview
           </button>
