@@ -17,7 +17,7 @@ builder.WebHost.ConfigureKestrel(options =>
 // Add services to the container.
 var connectionString = builder.Configuration.GetConnectionString("DefaultConnection");
 builder.Services.AddDbContext<ApplicationDbContext>(options =>
-    options.UseSqlite(connectionString));
+    options.UseSqlServer(connectionString));
 
 builder.Services.AddScoped<JwtService>(); // register the JwtService as a scoped service in the dependency injection container.
 builder.Services.AddScoped<Fileservice>();
@@ -68,9 +68,12 @@ builder.Services.AddControllers()
 builder.Services.AddSwaggerGen();
 
 // CORS for Angular dev server
+var allowedOrigins = builder.Configuration.GetSection("Cors:AllowedOrigins").Get<string[]>()
+                     ?? new[] { "http://localhost:4200" };
+
 builder.Services.AddCors(options =>
     options.AddDefaultPolicy(policy =>
-        policy.WithOrigins("http://localhost:4200")
+        policy.WithOrigins(allowedOrigins)
               .AllowAnyHeader()
               .AllowAnyMethod()
               .AllowCredentials()));
