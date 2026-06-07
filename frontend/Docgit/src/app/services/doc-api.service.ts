@@ -43,7 +43,9 @@ const TOKEN_KEY = 'docgit_token';
 const USER_KEY = 'docgit_user';
 
 /** Backend `http` profile (launchSettings.json). Override if your API runs elsewhere. */
-const API_BASE_URL = 'http://localhost:5135';
+const API_BASE_URL =  typeof window !== 'undefined' && window.location.hostname !== 'localhost'
+  ? ''  // Empty string enables relative URLs pointing to the same server domain in production
+  : 'http://localhost:5135';
 
 @Injectable({ providedIn: 'root' })
 export class DocApiService {
