@@ -1,4 +1,4 @@
-﻿using Docgit.Data;
+using Docgit.Data;
 using Docgit.Domain;
 using Docgit.Dto;
 using Microsoft.EntityFrameworkCore;
@@ -10,11 +10,13 @@ namespace Docgit.Service
     {
         private readonly ApplicationDbContext _db;
         private readonly FileHistoryService _historyService;
+        private readonly BlobService _blobService;
 
-        public Fileservice(ApplicationDbContext db, FileHistoryService fileHistoryService)
+        public Fileservice(ApplicationDbContext db, FileHistoryService fileHistoryService, BlobService blobService)
         {
             _db = db;
             _historyService = fileHistoryService;
+            _blobService = blobService;
         }
 
         public async Task<JsonObject> GetAllForUserAsync(int userId)
@@ -26,7 +28,7 @@ namespace Docgit.Service
             return BuildNestTree(entities, null);
         }
 
-        // need discussion 
+        // need discussion
         private static JsonObject BuildNestTree(List<FileSystemEntity> allEntities, int? parentId)
         {
             var tree = new JsonObject();
@@ -67,7 +69,10 @@ namespace Docgit.Service
                 if (!deleted.IsFile)
                     return null;
 
-                deleted.Content = content;
+                var blobName = BlobService.FileBlobName(userId, path);
+                await _blobService.UploadAsync(blobName, content);
+                deleted.BlobName = blobName;
+                deleted.Content = null;
                 deleted.Bytes = content.LongLength;
                 deleted.Extintion = string.IsNullOrEmpty(System.IO.Path.GetExtension(deleted.Name))
                     ? null
@@ -116,13 +121,17 @@ namespace Docgit.Service
                 parentId = folder.Id;
             }
 
+            var blobName = BlobService.FileBlobName(userId, path);
+            await _blobService.UploadAsync(blobName, content);
+
             var fileEntity = new FileSystemEntity
             {
                 UserID = userId,
                 Name = fileName,
                 Path = path,
                 IsFile = true,
-                Content = content,
+                BlobName = blobName,
+                Content = null,
                 Extintion = string.IsNullOrEmpty(extension) ? null : extension,
                 Bytes = content.LongLength,
                 ParentId = parentId,
@@ -141,6 +150,17 @@ namespace Docgit.Service
            var file = await _db.FileSystemEntities
                 .FirstOrDefaultAsync(entity => entity.UserID == userId && entity.Path == path && !entity.IsDeleted);
             return file;
+        }
+
+        public async Task<byte[]?> GetFileContentAsync(int userId, string path)
+        {
+            var entity = await GetByPathAsync(userId, path);
+            if (entity == null || !entity.IsFile) return null;
+
+            if (entity.BlobName != null)
+                return await _blobService.DownloadAsync(entity.BlobName);
+
+            return entity.Content;
         }
 
         public async Task<JsonObject?> GetFolderContentAsync(int userId, string path)
@@ -193,7 +213,7 @@ namespace Docgit.Service
 
             // Notebook / Math / Calculas / sunday -> here sunday folder will be created.
             var segments = path.Split('/');
-            //what the size? 
+            //what the size?
             var folderName = segments[^1];
 
             int? parentId = null;
@@ -244,7 +264,10 @@ namespace Docgit.Service
             if (existing != null)
             {
                 await _historyService.SaveVersionAsync(existing);
-                existing.Content = content;
+                var blobName = BlobService.FileBlobName(userId, path);
+                await _blobService.UploadAsync(blobName, content);
+                existing.BlobName = blobName;
+                existing.Content = null;
                 existing.Bytes = content.LongLength;
                 existing.UpdatedAt = DateTime.UtcNow;
                 await _db.SaveChangesAsync();
@@ -258,7 +281,10 @@ namespace Docgit.Service
                 if (!deleted.IsFile)
                     return (deleted, true);
 
-                deleted.Content = content;
+                var blobName = BlobService.FileBlobName(userId, path);
+                await _blobService.UploadAsync(blobName, content);
+                deleted.BlobName = blobName;
+                deleted.Content = null;
                 deleted.Bytes = content.LongLength;
                 deleted.Extintion = string.IsNullOrEmpty(System.IO.Path.GetExtension(deleted.Name))
                     ? null
@@ -309,6 +335,19 @@ namespace Docgit.Service
                 .FirstOrDefaultAsync(f => f.UserID == userId && f.Path == path);
 
             if (entity == null) return;
+
+            var blobDeletions = new List<Task>();
+
+            if (entity.BlobName != null)
+                blobDeletions.Add(_blobService.DeleteAsync(entity.BlobName));
+
+            foreach (var history in entity.FileHistories)
+            {
+                if (history.BlobName != null)
+                    blobDeletions.Add(_blobService.DeleteAsync(history.BlobName));
+            }
+
+            await Task.WhenAll(blobDeletions);
 
             _db.FileHistories.RemoveRange(entity.FileHistories);
             _db.FileSystemEntities.Remove(entity);

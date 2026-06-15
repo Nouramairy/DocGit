@@ -7,16 +7,13 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <PackageReference Include="Azure.Storage.Blobs" Version="12.22.2" />
     <PackageReference Include="BCrypt.Net-Next" Version="4.0.3" />
     <PackageReference Include="Microsoft.AspNetCore.Authentication.JwtBearer" Version="9.0.0" />
     <PackageReference Include="Microsoft.AspNetCore.SignalR" Version="1.2.0" />
     <PackageReference Include="Microsoft.EntityFrameworkCore.Design" Version="9.0.0" />
     <PackageReference Include="Microsoft.EntityFrameworkCore.SqlServer" Version="9.0.0" />
     <PackageReference Include="Swashbuckle.AspNetCore" Version="9.0.1" />
-  </ItemGroup>
-
-  <ItemGroup>
-    <Compile Remove="Migrations\**\*.cs" />
   </ItemGroup>
 
   <Target Name="CopyAngularBuildToWwwroot" BeforeTargets="PrepareForPublish">
@@ -26,13 +23,8 @@
     <ItemGroup>
       <AngularFiles Include="$(AngularBrowserDist)\**\*" Exclude="$(AngularBrowserDist)\index.csr.html" />
     </ItemGroup>
-    <Copy SourceFiles="@(AngularFiles)"
-          DestinationFolder="$(MSBuildProjectDirectory)\wwwroot\%(RecursiveDir)"
-          SkipUnchangedFiles="true"
-          Condition="Exists('$(AngularBrowserDist)')" />
-    <Copy SourceFiles="$(AngularBrowserDist)\index.csr.html"
-          DestinationFiles="$(MSBuildProjectDirectory)\wwwroot\index.html"
-          Condition="Exists('$(AngularBrowserDist)\index.csr.html')" />
+    <Copy SourceFiles="@(AngularFiles)" DestinationFolder="$(MSBuildProjectDirectory)\wwwroot\%(RecursiveDir)" SkipUnchangedFiles="true" Condition="Exists('$(AngularBrowserDist)')" />
+    <Copy SourceFiles="$(AngularBrowserDist)\index.csr.html" DestinationFiles="$(MSBuildProjectDirectory)\wwwroot\index.html" Condition="Exists('$(AngularBrowserDist)\index.csr.html')" />
   </Target>
 
 </Project>

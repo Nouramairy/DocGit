@@ -20,6 +20,7 @@ builder.Services.AddDbContext<ApplicationDbContext>(options =>
     options.UseSqlServer(connectionString));
 
 builder.Services.AddScoped<JwtService>(); // register the JwtService as a scoped service in the dependency injection container.
+builder.Services.AddSingleton<BlobService>();
 builder.Services.AddScoped<Fileservice>();
 // This allows it to be injected into controllers or other services that require it.
 builder.Services.AddScoped<FileHistoryService>();
@@ -85,6 +86,8 @@ using (var scope = app.Services.CreateScope())
 {
     var db = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
     db.Database.EnsureCreated();
+
+
 
     if (!db.Users.Any(u => u.UserName == "test-user"))
     {

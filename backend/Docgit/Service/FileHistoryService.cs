@@ -1,4 +1,4 @@
-﻿using Docgit.Data;
+using Docgit.Data;
 using Docgit.Domain;
 using Docgit.Dto;
 using Microsoft.EntityFrameworkCore;
@@ -8,27 +8,39 @@ namespace Docgit.Service
     public class FileHistoryService
     {
         private readonly ApplicationDbContext _db;
+        private readonly BlobService _blobService;
 
-
-        public FileHistoryService(ApplicationDbContext db)
+        public FileHistoryService(ApplicationDbContext db, BlobService blobService)
         {
             _db = db;
+            _blobService = blobService;
         }
 
         public async Task SaveVersionAsync(FileSystemEntity entity)
         {
-            if (entity.Content == null || entity.Content.Length == 0) return;
+            byte[]? content;
+            if (entity.BlobName != null)
+                content = await _blobService.DownloadAsync(entity.BlobName);
+            else
+                content = entity.Content;
+
+            if (content == null || content.Length == 0) return;
 
             var maxVersion = await _db.FileHistories
                 .Where(h => h.FileEntityId == entity.Id)
                 .MaxAsync(h => (int?)h.VersionNumber) ?? 0;
 
+            var versionNumber = maxVersion + 1;
+            var blobName = BlobService.HistoryBlobName(entity.Id, versionNumber);
+            await _blobService.UploadAsync(blobName, content);
+
             var history = new FileHistory
             {
                 FileEntityId = entity.Id,
-                VersionNumber = maxVersion + 1,
-                Content = entity.Content,
-                Bytes = entity.Bytes,
+                VersionNumber = versionNumber,
+                BlobName = blobName,
+                Content = null,
+                Bytes = content.LongLength,
                 SavedAt = DateTime.UtcNow
             };
 
@@ -50,12 +62,17 @@ namespace Docgit.Service
                 .ToListAsync();
         }
 
-            public async Task<byte[]?> GetVersionContentAsync(int fileEntityId, int versionNumber)
-            {
-                var history = await _db.FileHistories
-                    .FirstOrDefaultAsync(h => h.FileEntityId == fileEntityId && h.VersionNumber == versionNumber);
-    
-                return history?.Content;
+        public async Task<byte[]?> GetVersionContentAsync(int fileEntityId, int versionNumber)
+        {
+            var history = await _db.FileHistories
+                .FirstOrDefaultAsync(h => h.FileEntityId == fileEntityId && h.VersionNumber == versionNumber);
+
+            if (history == null) return null;
+
+            if (history.BlobName != null)
+                return await _blobService.DownloadAsync(history.BlobName);
+
+            return history.Content;
         }
     }
 }

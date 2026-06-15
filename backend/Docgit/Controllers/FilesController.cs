@@ -120,13 +120,11 @@ namespace Docgit.Controllers
                 return Ok(folderContent ?? new System.Text.Json.Nodes.JsonObject());
             }
 
-            if (fileOrFolder.Content == null)
-            {
+            var content = await _fileService.GetFileContentAsync(UserId, path);
+            if (content == null)
                 return Ok();
-            }
 
-
-            return File(fileOrFolder.Content, GetMimeType(fileOrFolder.Extintion), fileOrFolder.Name);
+            return File(content, GetMimeType(fileOrFolder.Extintion), fileOrFolder.Name);
         }
 
 

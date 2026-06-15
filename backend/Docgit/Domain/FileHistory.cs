@@ -7,6 +7,7 @@
         public FileSystemEntity FileEntity { get; set; } = null!;
         public int VersionNumber { get; set; } 
         public byte[]? Content { get; set; }
+        public string? BlobName { get; set; }
         public long Bytes { get; set; }
         public DateTime SavedAt { get; set; }
     }
