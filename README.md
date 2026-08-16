@@ -2,7 +2,7 @@
 
 A document management system with Git-inspired version history. Store, edit, and organize text files and folders in a hierarchical tree, with automatic per-save versioning and real-time sync across browser sessions.
 
-**Live URL:** https://docgit-ddgpfhb9fccvfaej.swedencentral-01.azurewebsites.net/
+**Live URL:** https://docgit-ddgpfhb9fccvfaej.swedencentral-01.azurewebsites.net/ // right now there is issues with azure free plan.
 
 ---
 
